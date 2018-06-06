@@ -1,0 +1,194 @@
+RUNSPEC
+-- Title is used as header on output, to identify run
+TITLE
+Example Simulation
+-- Specify dimension of model, NX, NY, NZ
+DIMENS
+-- NX NY NZ
+10 10 3 /
+-- Phases included (oil and water, i.e. 2-phase run)
+OIL
+WATER
+-- Units to use, METRIC, FIELD or LAB
+FIELD
+-- Specify maximum values for well data
+WELLDIMS
+-- max.wells; max.cell-connections; Next three values are defaulted
+4 5 3* /
+-- Start date, i.e. “Day 0” in simulation
+START
+1 'JAN' 2009 /
+
+
+GRID
+-- Definition of grid cells. From DIMENS keyword above, we have:
+-- N = NX*NY*NZ = 10*3*3 = 90.
+-- In each cell DX = DY = 1000 ft and DZ = 50 ft
+-- (Dimension measured in feet since units were defined as FIELD above)
+-- The grid cells are then defined by:
+DX
+300*1000 /
+DY
+300*1000 /
+DZ
+300*50 /
+
+--depths which are consistent with the DZ-values defined by:
+TOPS
+100*5000 100*5050 100*5100 /
+
+-- Permeabilities are constant, so define 300 equal values.
+PERMX
+300*100 /
+PERMY
+300*100 /
+PERMZ
+300*20 /
+
+-- Porosity is constant in each layer, so define 100 values in layer 1, 100 in layer 2, and 100 in layer 3.
+PORO
+100*0.3
+100*0.23
+100*0.18 /
+
+PROPS
+-- Relative permeability for water and oil,
+-- and water-oil capillary pressure, as a function of water saturation
+SWOF
+-- Sw Krw Krow Pcow
+0.2   0.00   1.00   326.2
+0.3   0.01   0.99   168.7
+0.4   0.02   0.88   101.2
+0.5   0.03   0.67   67.4
+0.6   0.04   0.56   52.9
+0.7   0.06   0.39   42.4
+0.8   0.19   0.16   0.00
+0.9   0.45   0.00   0.00
+1.0   0.78   0.00   0.00
+/
+
+-- PVT properties for water.
+-- Pref: Reference pressure for rest of data (psi)
+-- Bw: Volume formation factor for water
+-- Cw: Water compressibiblity
+-- ViscW: Water viscosity
+PVTW 
+-- Pref Bw Cw ViscW 
+4014.7 1.029 3.13D-6 0.31 0 / 
+
+-- PVT properties for oil 
+PVDO 
+-- P Bo viscO 
+3337.0  1.2600  1.042 
+3725.0  1.2555  1.072 
+4139.5  1.2507  1.096 
+4573.2  1.2463  1.118 
+5053.9  1.2417  1.151 
+5487.5  1.2377  1.174 
+5813.9  1.2356  1.2 / 
+
+-- Dead oil: Rs (Gas resolution factor) is constant 
+RSCONST 
+-- Rs Bubble-point-pressure 
+0.4 3337.0 / 
+-- Specify constant rock compressibility. 
+ROCK 
+-- Pref Cr 
+14.7 3.0D-6 / 
+-- Fluid densities at surface conditions 
+DENSITY 
+-- Oil Water Gas 
+49.1 64.79 0.06054 / 
+
+SOLUTION
+EQUIL 
+-- DD = Datum depth, the depth to which all reports will be referenced. 
+-- DD Pres.at.DD OWC Pcow(OWC) Default rest of data items 
+5000 4800 6000 0.0 6* / 
+
+SUMMARY
+-- List data vectors which we want stored for graphics post-processing 
+-- Field Oil Production Rate 
+FOPR 
+-- Field Oil Production Total 
+FOPT 
+-- Field Pressure (averaged reservoir pressure) 
+FPR 
+-- Field Oil In Place 
+FOIP 
+-- Field Water Production Rate 
+WWPR 
+-- Field Water Injection Rate 
+WWIR 
+-- Well Water Cut for all wells 
+WWCT 
+/ 
+
+SCHEDULE 
+-- Specify output of graphics result files for cell data, and times which to write these. 
+RPTRST 
+BASIC=5 NORST=1 FREQ=6 / 
+
+-- Well specification: Give names, positions (i, j) and main phase of wells 
+WELSPECS 
+
+--wname group i j Z(bhp) prefPhase 
+'WP1' 'G' 10 2 1* 'OIL' / 
+/ 
+
+-- Completion data, the well is open to the reservoir in cells in layers from k_hi to k_lo. 
+COMPDAT 
+--wname ic jc k_hi k_lo open/shut 2*default well_diam 4*default 
+'WP1' 10 2 1 2 'OPEN' 2* 0.5 4* / 
+/ 
+
+-- Well WP1 will produce with an oil rate of 2000 STB/day constrained by that well’s flowing bottomhole pressure is minimum 3350 psi. 
+WCONPROD 
+--wname open/shut ctrlmode orat 4*Default bhpmin Rest default 
+'WP1' 'OPEN' 'ORAT' 2000 4* 3350 / 
+/ 
+
+-- Milestone dates, e.g. to write results 
+DATES 
+1 'FEB' 2009 / 
+1 'MAR' 2009 / 
+/ 
+-- Change production rate to 4000 STB/day 
+WCONPROD 
+--wname open/shut ctrlmode orat 4*Default bhpmin Rest default 
+'WP1' 'OPEN' 'ORAT' 4000 4* 3350 / 
+/ 
+DATES 
+1 'APR' 2009 / 
+/ 
+
+DATES
+1 MAY 2009 /
+/ 
+DATES
+1 JUN 2009 /
+/ 
+DATES
+1 JUL 2009 /
+/ 
+DATES
+1 AUG 2009 /
+/ 
+DATES
+1 SEP 2009 /
+/ 
+DATES
+1 OCT 2009 /
+/ 
+DATES
+1 NOV 2009 /
+/ 
+DATES
+1 DEC 2009 /
+/ 
+DATES
+1 JAN 2010
+ /
+/ 
+
+END 

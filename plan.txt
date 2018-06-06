@@ -1,0 +1,16 @@
+initialize reservoir with properties/10 gridblocks
+	p
+	poro
+	perm
+	dx
+	q
+define pvt properties object
+	swof
+		Sw Krw Krow Pcow
+	pvt.w
+		Pref Bw Cw ViscW
+	pvt.o
+		P Bo ViscO
+
+solve
+	
