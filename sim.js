@@ -160,11 +160,11 @@ for(var i = 0; i < res.cell.length; i++){
 	
 	var row =[];
 	for(var j = 0; j < res.cell.length; j++){
-		if(i == j -1)
+		if(i == j + 1)
 			row[j] = a;
 		else if(i == j)
 			row[j] = b;
-		else if(i == j+1)
+		else if(i == j-1)
 			row[j] = c;
 		else
 			row[j] = 0;
