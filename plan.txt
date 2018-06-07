@@ -13,4 +13,5 @@ define pvt properties object
 		P Bo ViscO
 
 solve
-	
+	generate sparse matrix
+	solve using gaussian elimination
