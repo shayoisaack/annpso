@@ -21,6 +21,8 @@ function Cell(p, poro, perm, dx){
 	this.qo_ = 0;
 	this.qw_ = 0;
 	this.dx = dx; //ft
+	this.Sw = 0.3;
+	this.So = 1 - this.Sw;
 }
 
 //pvt properties
@@ -45,15 +47,55 @@ rho.w = 64.79;
 rho.g = 0.06054;
 
 //functions to evaluate pvt properties
-var Sw = function(){
+function extrapolate(val, arr1, arr2){
+	var pos = arr1.find(function(element){
+		return val > element;
+	});
 
+	return arr2[pos-1] + (val - arr1[pos-1]*(arr2[pos] - arr2[pos-1])/(arr1[pos] - arr1[pos-1]));
 }
 
+function Bo(i){
+	return extrapolate(res.cell[i].p, pvt.o[0], pvt.o[1]);
+}
+
+function d1_Bo_dPo(i){
+	var Bo1 = extrapolate(res.cell[i].p, pvt.o[0], pvt.o[1]);
+	var Bo2 = extrapolate(res.cell[i].p+1, pvt.o[0], pvt.o[1]);
+
+	return 1/Bo2 - 1/Bo1;//dp = 1 psi
+}
+
+function Bw(i){
+	return pvt.w[1];
+}
+
+function d1_Bw_dPw(i){
+	return 0;
+}
+
+function dPcow_dSw(i){
+	var Pcow1 = extrapolate(res.cell[i].Sw, swof[0], swof[3]);
+	var Pcow2 = extrapolate(res.cell[i]+0.01, swof[0], swof[3]);
+	return (Pcow2 - Pcow1)/0.01;
+}
+
+function visc_o(i){
+	return extrapolate(res.cell[i].p, pvt.o[0], pvt.o[1]);
+}
+
+function visc_w(i){
+	return pvt.w[3];
+}
+
+function p_cow(i){
+	return extrapolate(res.cell[i].Sw, swof[0], swof[3]);
+}
 //set wells
 res.cell[5].qo_ = 2000;//one well at cell 5 producing 2000 stb/day
 
 var A = [];
-var d = [];
+var darr = [];
 //generate sparse matrix
 for(var i = 0; i< res.cell.length; i++){
 	var a, b, c, d;
@@ -61,10 +103,10 @@ for(var i = 0; i< res.cell.length; i++){
 	var Csww, Cswo;
 	var alpha;
 
-	Cpoo = res.cell[i].poro*(1 - Sw(i))/dt*(cr/Bo(i) + d1_Bo_dPo(i));
+	Cpoo = res.cell[i].poro*(1 - res.cell[i].Sw/dt*(cr/Bo(i) + d1_Bo_dPo(i)));
 	Cswo = - res.cell[i].poro/Bo(i)/dt;
-	Cpow = res.cell[i].poro*Sw(i)/dt*(cr/Bw(i) d1_Bw_dPw(i));
-	Csww = res.cell[i].poro/Bw(i)/dt - dP_cow_dSw(i)*Cpow;
+	Cpow = res.cell[i].poro*res.cell[i].Sw/dt*(cr/Bw(i) + d1_Bw_dPw(i));
+	Csww = res.cell[i].poro/Bw(i)/dt - dPcow_dSw(i)*Cpow;
 
 	lambda_o_pos = (res.cell[i+1].p >= res.cell[i].p)?res.cell[i+1].kx/visc_o(i+1)/Bo(i+1):res.cell[i].kx/visc_o(i)/Bo(i);
 	lambda_o_neg = (res.cell[i-1].p) >= res.cell[i].p?res.cell[i-1].kx/visc_o(i-1)/Bo(i-1):res.cell[i].kx/visc_o(i)/Bo(i);
@@ -82,7 +124,7 @@ for(var i = 0; i< res.cell.length; i++){
 	a = Txo_neg + alpha*Txw_neg;
 	c = Txo_pos + alpha*Txw_pos;
 	b = -(Txo_pos + Txo_neg + Cpoo) - alpha*(Txw_pos + Txw_neg + Cpow);
-	d = -(Cpoo + alpha*Cpow)*res.cell[i].p + res.cell[i].qo_ + alpha*res.cell[i].qw_ + alpha*Txw_pos*(p_cow(i+1) - pcow(i)) + alpha*Txw_neg*(p_cow(i-1) - p_cow(i));
+	d = -(Cpoo + alpha*Cpow)*res.cell[i].p + res.cell[i].qo_ + alpha*res.cell[i].qw_ + alpha*Txw_pos*(p_cow(i+1) - p_cow(i)) + alpha*Txw_neg*(p_cow(i-1) - p_cow(i));
 
 	var row =[];
 	for(var j = 0; j < res.cell.length; j++){
@@ -97,6 +139,8 @@ for(var i = 0; i< res.cell.length; i++){
 	}
 
 	A[i] = row;
-	d[i] = d;
+	darr[i] = d;
 }
+
+console.log(A);
 //end generate sparse matrix
