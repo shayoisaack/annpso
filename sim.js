@@ -45,6 +45,7 @@ var rho = {};
 rho.o = 49.1;
 rho.w = 64.79;
 rho.g = 0.06054;
+var Pi = 6000;//initial pressure (psi)
 
 //functions to evaluate pvt properties
 function extrapolate(val, arr1, arr2){
@@ -91,24 +92,35 @@ function p_cow(i){
 	return extrapolate(res.cell[i].Sw, swof[0], swof[3]);
 }
 //set wells
-res.cell[5].qo_ = 2000;//one well at cell 5 producing 2000 stb/day
+res.cell[5].qo_ = 20;//one well at cell 5 producing 2000 stb/day
 
 var A = [];
 var darr = [];
+
+// var a = [];
+// var b = [];
+// var c = [];
+// var d = [];
+var Txo_neg = [];
+var Txo_pos = [];
+var Txw_neg = [];
+var Txw_pos = [];
+var Csww = [];
+var Cswo = [];
+var Cpoo = [];
+var Cpow = [];
 //generate sparse matrix
 for(var i = 0; i < res.cell.length; i++){
 	var a, b, c, d;
-	var Txo_neg, Txo_pos, Txw_neg, Txw_pos;
-	var Csww, Cswo;
 	var alpha;
 
-	Cpoo = res.cell[i].poro*(1 - res.cell[i].Sw/dt*(cr/Bo(i) + d1_Bo_dPo(i)));
-	Cswo = - res.cell[i].poro/Bo(i)/dt;
-	Cpow = res.cell[i].poro*res.cell[i].Sw/dt*(cr/Bw(i) + d1_Bw_dPw(i));
-	Csww = res.cell[i].poro/Bw(i)/dt - dPcow_dSw(i)*Cpow;
-	//console.log('Cso: ',Cpow, Cpoo, Cswo, Csww);
+	Cpoo[i] = res.cell[i].poro*(1 - res.cell[i].Sw/dt*(cr/Bo(i) + d1_Bo_dPo(i)));
+	Cswo[i] = - res.cell[i].poro/Bo(i)/dt;
+	Cpow[i] = res.cell[i].poro*res.cell[i].Sw/dt*(cr/Bw(i) + d1_Bw_dPw(i));
+	Csww[i] = res.cell[i].poro/Bw(i)/dt - dPcow_dSw(i)*Cpow[i];
+	console.log('Cpow: ',Cpow, 'Cpoo', Cpoo, 'Cswo', Cswo, 'Csww', Csww);
 
-	alpha = -Csww/Cswo;
+	alpha = -Csww[i]/Cswo[i];
 
 	if(i == 0){
 		lambda_o_neg = 0;
@@ -116,12 +128,12 @@ for(var i = 0; i < res.cell.length; i++){
 		lambda_o_pos = (res.cell[i+1].p >= res.cell[i].p)?res.cell[i+1].kx/visc_o(i+1)/Bo(i+1):res.cell[i].kx/visc_o(i)/Bo(i);
 		lambda_w_pos = (res.cell[i+1].p >= res.cell[i].p)?res.cell[i+1].kx/visc_w(i+1)/Bw(i+1):res.cell[i].kx/visc_w(i)/Bw(i);
 
-		Txo_pos = 2*lambda_o_pos/res.cell[i].dx/(res.cell[i+1].dx/res.cell[i+1].kx + res.cell[i].dx/res.cell[i].kx);
-		Txo_neg = 0;
-		Txw_pos = 2*lambda_w_pos/res.cell[i].dx/(res.cell[i+1].dx/res.cell[i+1].kx + res.cell[i].dx/res.cell[i].kx);
-		Txw_neg = 0;
+		Txo_pos[i] = 2*lambda_o_pos/res.cell[i].dx/(res.cell[i+1].dx/res.cell[i+1].kx + res.cell[i].dx/res.cell[i].kx);
+		Txo_neg[i] = 0;
+		Txw_pos[i] = 2*lambda_w_pos/res.cell[i].dx/(res.cell[i+1].dx/res.cell[i+1].kx + res.cell[i].dx/res.cell[i].kx);
+		Txw_neg[i] = 0;
 
-		d = -(Cpoo + alpha*Cpow)*res.cell[i].p + res.cell[i].qo_ + alpha*res.cell[i].qw_ + alpha*Txw_pos*(p_cow(i+1) - p_cow(i));
+		d = -(Cpoo[i] + alpha*Cpow[i])*res.cell[i].p + res.cell[i].qo_ + alpha*res.cell[i].qw_ + alpha*Txw_pos[i]*(p_cow(i+1) - p_cow(i));
 	}
 	else if(i == res.cell.length-1){
 		lambda_o_pos = 0;
@@ -129,12 +141,12 @@ for(var i = 0; i < res.cell.length; i++){
 		lambda_w_neg = (res.cell[i-1].p) >= res.cell[i].p?res.cell[i-1].kx/visc_w(i-1)/Bw(i-1):res.cell[i].kx/visc_w(i)/Bw(i);
 		lambda_o_neg = (res.cell[i-1].p) >= res.cell[i].p?res.cell[i-1].kx/visc_o(i-1)/Bo(i-1):res.cell[i].kx/visc_o(i)/Bo(i);
 
-		Txo_pos = 0;
-		Txo_neg = 2*lambda_o_neg/res.cell[i].dx/(res.cell[i-1].dx/res.cell[i-1].kx + res.cell[i].dx/res.cell[i].kx);
-		Txw_pos = 0;
-		Txw_neg = 2*lambda_w_neg/res.cell[i].dx/(res.cell[i-1].dx/res.cell[i-1].kx + res.cell[i].dx/res.cell[i].kx);
+		Txo_pos[i] = 0;
+		Txo_neg[i] = 2*lambda_o_neg/res.cell[i].dx/(res.cell[i-1].dx/res.cell[i-1].kx + res.cell[i].dx/res.cell[i].kx);
+		Txw_pos[i] = 0;
+		Txw_neg[i] = 2*lambda_w_neg/res.cell[i].dx/(res.cell[i-1].dx/res.cell[i-1].kx + res.cell[i].dx/res.cell[i].kx);
 
-		d = -(Cpoo + alpha*Cpow)*res.cell[i].p + res.cell[i].qo_ + alpha*res.cell[i].qw_ + alpha*Txw_neg*(p_cow(i-1) - p_cow(i));
+		d = -(Cpoo[i] + alpha*Cpow[i])*res.cell[i].p + res.cell[i].qo_ + alpha*res.cell[i].qw_ + alpha*Txw_neg[i]*(p_cow(i-1) - p_cow(i));
 	}
 	else{
 		lambda_o_pos = (res.cell[i+1].p >= res.cell[i].p)?res.cell[i+1].kx/visc_o(i+1)/Bo(i+1):res.cell[i].kx/visc_o(i)/Bo(i);
@@ -142,16 +154,16 @@ for(var i = 0; i < res.cell.length; i++){
 		lambda_w_pos = (res.cell[i+1].p >= res.cell[i].p)?res.cell[i+1].kx/visc_w(i+1)/Bw(i+1):res.cell[i].kx/visc_w(i)/Bw(i);
 		lambda_w_neg = (res.cell[i-1].p) >= res.cell[i].p?res.cell[i-1].kx/visc_w(i-1)/Bw(i-1):res.cell[i].kx/visc_w(i)/Bw(i);
 
-		Txo_pos = 2*lambda_o_pos/res.cell[i].dx/(res.cell[i+1].dx/res.cell[i+1].kx + res.cell[i].dx/res.cell[i].kx);
-		Txo_neg = 2*lambda_o_neg/res.cell[i].dx/(res.cell[i-1].dx/res.cell[i-1].kx + res.cell[i].dx/res.cell[i].kx);
-		Txw_pos = 2*lambda_w_pos/res.cell[i].dx/(res.cell[i+1].dx/res.cell[i+1].kx + res.cell[i].dx/res.cell[i].kx);
-		Txw_neg = 2*lambda_w_neg/res.cell[i].dx/(res.cell[i-1].dx/res.cell[i-1].kx + res.cell[i].dx/res.cell[i].kx);
-		d = -(Cpoo + alpha*Cpow)*res.cell[i].p + res.cell[i].qo_ + alpha*res.cell[i].qw_ + alpha*Txw_pos*(p_cow(i+1) - p_cow(i)) + alpha*Txw_neg*(p_cow(i-1) - p_cow(i));
+		Txo_pos[i] = 2*lambda_o_pos/res.cell[i].dx/(res.cell[i+1].dx/res.cell[i+1].kx + res.cell[i].dx/res.cell[i].kx);
+		Txo_neg[i] = 2*lambda_o_neg/res.cell[i].dx/(res.cell[i-1].dx/res.cell[i-1].kx + res.cell[i].dx/res.cell[i].kx);
+		Txw_pos[i] = 2*lambda_w_pos/res.cell[i].dx/(res.cell[i+1].dx/res.cell[i+1].kx + res.cell[i].dx/res.cell[i].kx);
+		Txw_neg[i] = 2*lambda_w_neg/res.cell[i].dx/(res.cell[i-1].dx/res.cell[i-1].kx + res.cell[i].dx/res.cell[i].kx);
+		d = -(Cpoo[i] + alpha*Cpow[i])*res.cell[i].p + res.cell[i].qo_ + alpha*res.cell[i].qw_ + alpha*Txw_pos[i]*(p_cow(i+1) - p_cow(i)) + alpha*Txw_neg[i]*(p_cow(i-1) - p_cow(i));
 	}
 
-	a = Txo_neg + alpha*Txw_neg;
-	c = Txo_pos + alpha*Txw_pos;
-	b = -(Txo_pos + Txo_neg + Cpoo) - alpha*(Txw_pos + Txw_neg + Cpow);
+	a = Txo_neg[i] + alpha*Txw_neg[i];
+	c = Txo_pos[i] + alpha*Txw_pos[i];
+	b = -(Txo_pos[i] + Txo_neg[i] + Cpoo[i]) - alpha*(Txw_pos[i] + Txw_neg[i] + Cpow[i]);
 	
 	a = Math.floor(a);
 	b = Math.floor(b);
@@ -174,7 +186,21 @@ for(var i = 0; i < res.cell.length; i++){
 	darr[i] = d;
 }
 
+var Pnew = [];
 console.log('A = ', A, '\n');
 console.log('d = ', darr, '\n');
-console.log('x(new pressures) = ', gauss(A, darr));
-//end generate sparse matrix
+console.log('x(new pressures) = ', Pnew = gauss(A, darr), '\n');
+
+//calculate new saturations
+var Sw = [];
+for(var i = 0; i < res.cell.length; i++){
+	if(i == 0){
+		Pnew[-1] = Pi
+	}
+	else if(i == res.cell.length-1){
+		Pnew[res.cell.length] = Pi;
+	}
+	Sw[i] = res.cell[i].Sw+1/Cswo[i]*(Txo_pos[i]*(Pnew[i+1]-Pnew[i])+Txo_neg[i]*(Pnew[i-1]-Pnew[i])-res.cell[i].qo_-Cpoo[i]*(Pnew[i]-res.cell[i].p));
+}
+
+console.log('Sw = ', Sw);
