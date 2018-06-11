@@ -49,10 +49,29 @@ var Pi = 6000;//initial pressure (psi)
 
 //functions to evaluate pvt properties
 function extrapolate(val, arr1, arr2){
+	var x1, x2, y1, y2;
 	var pos = arr1.findIndex(function(element){
 		return val < element;
 	});
-	return arr2[pos-1] + (val - arr1[pos-1]*(arr2[pos] - arr2[pos-1])/(arr1[pos] - arr1[pos-1]));
+	if(pos < 1){
+		x1 = arr1[0];
+		x2 = arr1[1];
+		y1 = arr2[0];
+		y2 = arr2[1];
+	}
+	else if (pos > arr1.length-1){
+		x1 = arr1[arr1.length-2];
+		x2 = arr1[arr1.length-1];
+		y1 = arr2[arr2.length-2];
+		y2 = arr2[arr2.length-1];
+	}
+	else{
+		x1 = arr1[pos-1];
+		x2 = arr1[pos];
+		y1 = arr2[pos-1];
+		y2 = arr2[pos];
+	}
+	return y1 + (val - x1)*(y1 - y2)/(x1 - x2);
 }
 
 function Bo(i){
@@ -93,7 +112,7 @@ function p_cow(i){
 }
 //set wells
 res.cell[5].qo_ = 200;//one well at cell 5 producing 2000 stb/day
-res.cell[5].qw_ = 20;
+//res.cell[5].qw_ = 20;
 
 for(var timeIndex = 1; timeIndex <= 2; timeIndex++){//number of timesteps to iterate (in days)
 	console.log('/////////////////////////////////////////////////////////////// ', 'day ', timeIndex, '\n');
@@ -121,7 +140,7 @@ for(var timeIndex = 1; timeIndex <= 2; timeIndex++){//number of timesteps to ite
 		//console.log('Cpow: ',Cpow, 'Cpoo', Cpoo, 'Cswo', Cswo, 'Csww', Csww);
 
 		alpha = -Csww[i]/Cswo[i];
-		console.log(alpha);
+		//console.log(alpha);
 
 		if(i == 0){
 			lambda_o_neg = 0;
@@ -208,6 +227,7 @@ for(var timeIndex = 1; timeIndex <= 2; timeIndex++){//number of timesteps to ite
 	for(var i = 0; i < res.cell.length; i++){
 		res.cell[i].p = Pnew[i];
 		res.cell[i].Sw = Swnew[i];
+		res.cell[i].So = 1 - Swnew[i];
 	}
 
 	console.log('Sw_new = ', Swnew, '\n');
