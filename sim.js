@@ -111,8 +111,8 @@ function p_cow(i){
 	return extrapolate(res.cell[i].Sw, swof[0], swof[3]);
 }
 //set wells
-res.cell[5].qo_ = 200;//one well at cell 5 producing 2000 stb/day
-//res.cell[5].qw_ = 20;
+res.cell[5].qo_ = 0.001;//one well at cell 5 producing 2000 stb/day
+res.cell[5].qw_ = 0.0001;
 
 for(var timeIndex = 1; timeIndex <= 2; timeIndex++){//number of timesteps to iterate (in days)
 	console.log('/////////////////////////////////////////////////////////////// ', 'day ', timeIndex, '\n');
@@ -185,10 +185,10 @@ for(var timeIndex = 1; timeIndex <= 2; timeIndex++){//number of timesteps to ite
 		c = Txo_pos[i] + alpha*Txw_pos[i];
 		b = -(Txo_pos[i] + Txo_neg[i] + Cpoo[i]) - alpha*(Txw_pos[i] + Txw_neg[i] + Cpow[i]);
 
-		a = Math.floor(a);
-		b = Math.floor(b);
-		c = Math.floor(c);
-		d = Math.floor(d);
+		// a = Math.floor(a);
+		// b = Math.floor(b);
+		// c = Math.floor(c);
+		// d = Math.floor(d);
 
 		var row =[];
 		for(var j = 0; j < res.cell.length; j++){
@@ -207,8 +207,8 @@ for(var timeIndex = 1; timeIndex <= 2; timeIndex++){//number of timesteps to ite
 	}
 
 	var Pnew = [];
-	console.log('A = ', A, '\n');
-	console.log('d = ', darr, '\n');
+	//console.log('A = ', A, '\n');
+	//console.log('d = ', darr, '\n');
 	console.log('P_new = ', Pnew = gauss(A, darr), '\n');
 
 	//calculate new saturations
