@@ -237,7 +237,7 @@ function p_cow(i){
 // //go to next timestep
 // }
 
-simulate(res, 2, [{loc: 5, p_bh: 4490, qo_: 0.001, qw_: 0.0001}]);
+simulate(res, 2, [{loc: 5, p_bh: 1500, qo_: 0.001, qw_: 0.0001}]);
 
 function simulate(res, timesteps, wells){
 	//console.log(wells);
@@ -250,7 +250,7 @@ function simulate(res, timesteps, wells){
 		var loc = wells[wellIndex].loc;
 		var re = Math.sqrt(res.cell[loc].dy*res.cell[loc].dx/Math.PI);
 		var rw = 0.25;//ft
-		var WC = 2*Math.PI*res.cell[loc].kx*res.cell[loc].dz/Math.log(re/rw);
+		var WC = 0.00001*2*Math.PI*res.cell[loc].kx*res.cell[loc].dz/Math.log(re/rw);
 
 		var Area = Math.PI*re^2;
 		var kro = extrapolate(res.cell[loc].Sw, swof[0], swof[2]);
@@ -258,11 +258,14 @@ function simulate(res, timesteps, wells){
 		var lambda_o_well = 1/Bw(loc)*(kro/visc_o(loc)+krw/visc_w(loc));
 		var lambda_w_well = 1/Bo(loc)*(kro/visc_o(loc)+krw/visc_w(loc));
 
-		//res.cell[loc].qo_ = WC/(Area*res.cell[loc].dx)*lambda_o_well*(res.cell[loc].p-wells[wellIndex].p_bh);
-		//res.cell[loc].qw_ = WC/(Area*res.cell[loc].dx)*lambda_w_well*(res.cell[loc].p-p_cow(loc)-wells[wellIndex].p_bh);
+		res.cell[loc].qo_ = WC/(Area*res.cell[loc].dx)*lambda_o_well*(res.cell[loc].p-wells[wellIndex].p_bh);
+		res.cell[loc].qw_ = WC/(Area*res.cell[loc].dx)*lambda_w_well*(res.cell[loc].p-p_cow(loc)-wells[wellIndex].p_bh);
 		
-		res.cell[loc].qo_ = wells[wellIndex].qo_;
-		res.cell[loc].qw_ = wells[wellIndex].qw_;
+		//res.cell[loc].qo_ = wells[wellIndex].qo_;
+		//res.cell[loc].qw_ = wells[wellIndex].qw_;
+
+		res.cell[loc].qo_ = 5.614583*res.cell[loc].qo_;
+		res.cell[loc].qo_ = 5.614583*res.cell[loc].qw_;
 
 		console.log('qo_', res.cell[loc].qo_);
 		console.log('qw_', res.cell[loc].qw_);
@@ -336,6 +339,11 @@ function simulate(res, timesteps, wells){
 				d = -(Cpoo[i] + alpha*Cpow[i])*res.cell[i].p + res.cell[i].qo_ + alpha*res.cell[i].qw_ + alpha*Txw_pos[i]*(p_cow(i+1) - p_cow(i)) + alpha*Txw_neg[i]*(p_cow(i-1) - p_cow(i));
 			}
 
+			Txo_neg[i] = Txo_neg[i]*0.001127;
+			Txo_pos[i] = Txo_pos[i]*0.001127;
+			Txw_neg[i] = Txw_neg[i]*0.001127;
+			Txw_pos[i] = Txw_pos[i]*0.001127;
+
 			a = Txo_neg[i] + alpha*Txw_neg[i];
 			c = Txo_pos[i] + alpha*Txw_pos[i];
 			b = -(Txo_pos[i] + Txo_neg[i] + Cpoo[i]) - alpha*(Txw_pos[i] + Txw_neg[i] + Cpow[i]);
@@ -365,7 +373,8 @@ function simulate(res, timesteps, wells){
 		var Swnew = [];
 		for(var i = 0; i < res.cell.length; i++){
 			if(i == 0){
-				Pnew[-1] = Pi
+				Pnew[-1] = Pi;
+				//console.log('Txo_neg', Txo_neg);
 			}
 			else if(i == res.cell.length-1){
 				Pnew[res.cell.length] = Pi;
