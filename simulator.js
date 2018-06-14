@@ -35,35 +35,39 @@ var simulate = function (res, timesteps, wells){
 	for(var timeIndex = 1; timeIndex <= timesteps; timeIndex++){//number of timesteps to iterate (in days)
 		//console.log('/////////////////////////////////////////////////////////////// ', 'day ', timeIndex, '\n');
 
-		//set wells
-		for(var wellIndex = 0; wellIndex < wells.length; wellIndex++){
-			var loc = wells[wellIndex].loc;
-			var re = Math.sqrt(res.cell[loc].dy*res.cell[loc].dx/Math.PI);
-			var rw = 0.25;//ft
-			var WC = 0.0001*2*Math.PI*res.cell[loc].kx*res.cell[loc].dz/Math.log(re/rw);
+	// 	//set wells
+	// 	for(var wellIndex = 0; wellIndex < wells.length; wellIndex++){
+	// 		var loc = wells[wellIndex].loc;
+	// 		var re = Math.sqrt(res.cell[loc].dy*res.cell[loc].dx/Math.PI);
+	// 		var rw = 0.25;//ft
+	// 		var WC = 0.0001*2*Math.PI*res.cell[loc].kx*res.cell[loc].dz/Math.log(re/rw);
 
-			var Area = Math.PI*re^2;
-			var kro = extrapolate(res.cell[loc].Sw, swof[0], swof[2]);
-			var krw = extrapolate(res.cell[loc].Sw, swof[0], swof[1]);
-			var lambda_o_well = 1/Bw(loc)*(kro/visc_o(loc)+krw/visc_w(loc));
-			var lambda_w_well = 1/Bo(loc)*(kro/visc_o(loc)+krw/visc_w(loc));
+	// 		var Area = Math.PI*re^2;
+	// 		var kro = extrapolate(res.cell[loc].Sw, swof[0], swof[2]);
+	// 		var krw = extrapolate(res.cell[loc].Sw, swof[0], swof[1]);
+	// 		var lambda_o_well = 1/Bw(loc)*(kro/visc_o(loc)+krw/visc_w(loc));
+	// 		var lambda_w_well = 1/Bo(loc)*(kro/visc_o(loc)+krw/visc_w(loc));
 
-			res.cell[loc].qo_ = WC/(Area*res.cell[loc].dx)*lambda_o_well*(res.cell[loc].p-wells[wellIndex].p_bh);
-			res.cell[loc].qw_ = WC/(Area*res.cell[loc].dx)*lambda_w_well*(res.cell[loc].p-p_cow(loc)-wells[wellIndex].p_bh);
+	// 		res.cell[loc].qo_ = WC/(Area*res.cell[loc].dx)*lambda_o_well*(res.cell[loc].p-wells[wellIndex].p_bh);
+	// 		res.cell[loc].qw_ = WC/(Area*res.cell[loc].dx)*lambda_w_well*(res.cell[loc].p-p_cow(loc)-wells[wellIndex].p_bh);
 		
-			//res.cell[loc].qo_ = wells[wellIndex].qo_;
-			//res.cell[loc].qw_ = wells[wellIndex].qw_;
+	// 		//res.cell[loc].qo_ = wells[wellIndex].qo_;
+	// 		//res.cell[loc].qw_ = wells[wellIndex].qw_;
 
-			res.cell[loc].qo_ = 5.614583*res.cell[loc].qo_;
-			res.cell[loc].qo_ = 5.614583*res.cell[loc].qw_;
+	// 		res.cell[loc].qo_ = 5.614583*res.cell[loc].qo_;
+	// 		res.cell[loc].qo_ = 5.614583*res.cell[loc].qw_;
 
-			N_o += res.cell[loc].qo_;
-			N_w += res.cell[loc].qw_;
+	// 		N_o += res.cell[loc].qo_;
+	// 		N_w += res.cell[loc].qw_;
 
-			//console.log('qo_', res.cell[loc].qo_);
-			//console.log('qw_', res.cell[loc].qw_);
-			//console.log('\n');
-		}
+	// 		//console.log('qo_', res.cell[loc].qo_);
+	// 		//console.log('qw_', res.cell[loc].qw_);
+	// 		//console.log('\n');
+	// 	}
+		var q_ = res.addWells(wells);
+		//console.log(q_);
+		N_o += q_.qo_;
+		N_w += q_.qw_;
 
 		var A = [];
 		var darr = [];
@@ -81,10 +85,10 @@ var simulate = function (res, timesteps, wells){
 			var a, b, c, d;
 			var alpha;
 
-			Cpoo[i] = res.cell[i].poro*(1 - res.cell[i].Sw/dt*(cr/Bo(i) + d1_Bo_dPo(i)));
-			Cswo[i] = - res.cell[i].poro/Bo(i)/dt;
-			Cpow[i] = res.cell[i].poro*res.cell[i].Sw/dt*(cr/Bw(i) + d1_Bw_dPw(i));
-			Csww[i] = res.cell[i].poro/Bw(i)/dt - dPcow_dSw(i)*Cpow[i];
+			Cpoo[i] = res.cell[i].poro*(1 - res.cell[i].Sw/dt*(cr/res.Bo(i) + res.d1_Bo_dPo(i)));
+			Cswo[i] = - res.cell[i].poro/res.Bo(i)/dt;
+			Cpow[i] = res.cell[i].poro*res.cell[i].Sw/dt*(cr/res.Bw(i) + res.d1_Bw_dPw(i));
+			Csww[i] = res.cell[i].poro/res.Bw(i)/dt - res.dPcow_dSw(i)*Cpow[i];
 			//console.log('Cpow: ',Cpow, 'Cpoo', Cpoo, 'Cswo', Cswo, 'Csww', Csww);
 
 			alpha = -Csww[i]/Cswo[i];
@@ -93,40 +97,40 @@ var simulate = function (res, timesteps, wells){
 			if(i == 0){
 				lambda_o_neg = 0;
 				lambda_w_neg = 0;
-				lambda_o_pos = (res.cell[i+1].p >= res.cell[i].p)?res.cell[i+1].kx/visc_o(i+1)/Bo(i+1):res.cell[i].kx/visc_o(i)/Bo(i);
-				lambda_w_pos = (res.cell[i+1].p >= res.cell[i].p)?res.cell[i+1].kx/visc_w(i+1)/Bw(i+1):res.cell[i].kx/visc_w(i)/Bw(i);
+				lambda_o_pos = (res.cell[i+1].p >= res.cell[i].p)?res.cell[i+1].kx/res.visc_o(i+1)/res.Bo(i+1):res.cell[i].kx/res.visc_o(i)/res.Bo(i);
+				lambda_w_pos = (res.cell[i+1].p >= res.cell[i].p)?res.cell[i+1].kx/res.visc_w(i+1)/res.Bw(i+1):res.cell[i].kx/res.visc_w(i)/Bw(i);
 
 				Txo_pos[i] = 2*lambda_o_pos/res.cell[i].dx/(res.cell[i+1].dx/res.cell[i+1].kx + res.cell[i].dx/res.cell[i].kx);
 				Txo_neg[i] = 0;
 				Txw_pos[i] = 2*lambda_w_pos/res.cell[i].dx/(res.cell[i+1].dx/res.cell[i+1].kx + res.cell[i].dx/res.cell[i].kx);
 				Txw_neg[i] = 0;
 
-				d = -(Cpoo[i] + alpha*Cpow[i])*res.cell[i].p + res.cell[i].qo_ + alpha*res.cell[i].qw_ + alpha*Txw_pos[i]*(p_cow(i+1) - p_cow(i));
+				d = -(Cpoo[i] + alpha*Cpow[i])*res.cell[i].p + res.cell[i].qo_ + alpha*res.cell[i].qw_ + alpha*Txw_pos[i]*(res.p_cow(i+1) - res.p_cow(i));
 			}
 			else if(i == res.cell.length-1){
 				lambda_o_pos = 0;
 				lambda_w_pos = 0;
-				lambda_w_neg = (res.cell[i-1].p) >= res.cell[i].p?res.cell[i-1].kx/visc_w(i-1)/Bw(i-1):res.cell[i].kx/visc_w(i)/Bw(i);
-				lambda_o_neg = (res.cell[i-1].p) >= res.cell[i].p?res.cell[i-1].kx/visc_o(i-1)/Bo(i-1):res.cell[i].kx/visc_o(i)/Bo(i);
+				lambda_w_neg = (res.cell[i-1].p) >= res.cell[i].p?res.cell[i-1].kx/res.visc_w(i-1)/res.Bw(i-1):res.cell[i].kx/res.visc_w(i)/res.Bw(i);
+				lambda_o_neg = (res.cell[i-1].p) >= res.cell[i].p?res.cell[i-1].kx/res.visc_o(i-1)/res.Bo(i-1):res.cell[i].kx/res.visc_o(i)/res.Bo(i);
 
 				Txo_pos[i] = 0;
 				Txo_neg[i] = 2*lambda_o_neg/res.cell[i].dx/(res.cell[i-1].dx/res.cell[i-1].kx + res.cell[i].dx/res.cell[i].kx);
 				Txw_pos[i] = 0;
 				Txw_neg[i] = 2*lambda_w_neg/res.cell[i].dx/(res.cell[i-1].dx/res.cell[i-1].kx + res.cell[i].dx/res.cell[i].kx);
 
-				d = -(Cpoo[i] + alpha*Cpow[i])*res.cell[i].p + res.cell[i].qo_ + alpha*res.cell[i].qw_ + alpha*Txw_neg[i]*(p_cow(i-1) - p_cow(i));
+				d = -(Cpoo[i] + alpha*Cpow[i])*res.cell[i].p + res.cell[i].qo_ + alpha*res.cell[i].qw_ + alpha*Txw_neg[i]*(res.p_cow(i-1) - res.p_cow(i));
 			}
 			else{
-				lambda_o_pos = (res.cell[i+1].p >= res.cell[i].p)?res.cell[i+1].kx/visc_o(i+1)/Bo(i+1):res.cell[i].kx/visc_o(i)/Bo(i);
-				lambda_o_neg = (res.cell[i-1].p) >= res.cell[i].p?res.cell[i-1].kx/visc_o(i-1)/Bo(i-1):res.cell[i].kx/visc_o(i)/Bo(i);
-				lambda_w_pos = (res.cell[i+1].p >= res.cell[i].p)?res.cell[i+1].kx/visc_w(i+1)/Bw(i+1):res.cell[i].kx/visc_w(i)/Bw(i);
-				lambda_w_neg = (res.cell[i-1].p) >= res.cell[i].p?res.cell[i-1].kx/visc_w(i-1)/Bw(i-1):res.cell[i].kx/visc_w(i)/Bw(i);
+				lambda_o_pos = (res.cell[i+1].p >= res.cell[i].p)?res.cell[i+1].kx/res.visc_o(i+1)/res.Bo(i+1):res.cell[i].kx/res.visc_o(i)/res.Bo(i);
+				lambda_o_neg = (res.cell[i-1].p) >= res.cell[i].p?res.cell[i-1].kx/res.visc_o(i-1)/res.Bo(i-1):res.cell[i].kx/res.visc_o(i)/res.Bo(i);
+				lambda_w_pos = (res.cell[i+1].p >= res.cell[i].p)?res.cell[i+1].kx/res.visc_w(i+1)/res.Bw(i+1):res.cell[i].kx/res.visc_w(i)/res.Bw(i);
+				lambda_w_neg = (res.cell[i-1].p) >= res.cell[i].p?res.cell[i-1].kx/res.visc_w(i-1)/res.Bw(i-1):res.cell[i].kx/res.visc_w(i)/res.Bw(i);
 
 				Txo_pos[i] = 2*lambda_o_pos/res.cell[i].dx/(res.cell[i+1].dx/res.cell[i+1].kx + res.cell[i].dx/res.cell[i].kx);
 				Txo_neg[i] = 2*lambda_o_neg/res.cell[i].dx/(res.cell[i-1].dx/res.cell[i-1].kx + res.cell[i].dx/res.cell[i].kx);
 				Txw_pos[i] = 2*lambda_w_pos/res.cell[i].dx/(res.cell[i+1].dx/res.cell[i+1].kx + res.cell[i].dx/res.cell[i].kx);
 				Txw_neg[i] = 2*lambda_w_neg/res.cell[i].dx/(res.cell[i-1].dx/res.cell[i-1].kx + res.cell[i].dx/res.cell[i].kx);
-				d = -(Cpoo[i] + alpha*Cpow[i])*res.cell[i].p + res.cell[i].qo_ + alpha*res.cell[i].qw_ + alpha*Txw_pos[i]*(p_cow(i+1) - p_cow(i)) + alpha*Txw_neg[i]*(p_cow(i-1) - p_cow(i));
+				d = -(Cpoo[i] + alpha*Cpow[i])*res.cell[i].p + res.cell[i].qo_ + alpha*res.cell[i].qw_ + alpha*Txw_pos[i]*(res.p_cow(i+1) - res.p_cow(i)) + alpha*Txw_neg[i]*(res.p_cow(i-1) - res.p_cow(i));
 			}
 
 			Txo_neg[i] = Txo_neg[i]*0.001127;
