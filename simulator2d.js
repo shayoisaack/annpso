@@ -35,35 +35,7 @@ var simulate = function (res, timesteps, wells){
 	for(var timeIndex = 1; timeIndex <= timesteps; timeIndex++){//number of timesteps to iterate (in days)
 		//console.log('/////////////////////////////////////////////////////////////// ', 'day ', timeIndex, '\n');
 
-	// 	//set wells
-	// 	for(var wellIndex = 0; wellIndex < wells.length; wellIndex++){
-	// 		var loc = wells[wellIndex].loc;
-	// 		var re = Math.sqrt(res.cell[loc].dy*res.cell[loc].dx/Math.PI);
-	// 		var rw = 0.25;//ft
-	// 		var WC = 0.0001*2*Math.PI*res.cell[loc].kx*res.cell[loc].dz/Math.log(re/rw);
-
-	// 		var Area = Math.PI*re^2;
-	// 		var kro = extrapolate(res.cell[loc].Sw, swof[0], swof[2]);
-	// 		var krw = extrapolate(res.cell[loc].Sw, swof[0], swof[1]);
-	// 		var lambda_o_well = 1/Bw(loc)*(kro/visc_o(loc)+krw/visc_w(loc));
-	// 		var lambda_w_well = 1/Bo(loc)*(kro/visc_o(loc)+krw/visc_w(loc));
-
-	// 		res.cell[loc].qo_ = WC/(Area*res.cell[loc].dx)*lambda_o_well*(res.cell[loc].p-wells[wellIndex].p_bh);
-	// 		res.cell[loc].qw_ = WC/(Area*res.cell[loc].dx)*lambda_w_well*(res.cell[loc].p-p_cow(loc)-wells[wellIndex].p_bh);
-		
-	// 		//res.cell[loc].qo_ = wells[wellIndex].qo_;
-	// 		//res.cell[loc].qw_ = wells[wellIndex].qw_;
-
-	// 		res.cell[loc].qo_ = 5.614583*res.cell[loc].qo_;
-	// 		res.cell[loc].qo_ = 5.614583*res.cell[loc].qw_;
-
-	// 		N_o += res.cell[loc].qo_;
-	// 		N_w += res.cell[loc].qw_;
-
-	// 		//console.log('qo_', res.cell[loc].qo_);
-	// 		//console.log('qw_', res.cell[loc].qw_);
-	// 		//console.log('\n');
-	// 	}
+		//set wells
 		var q_ = res.addWells(wells);
 		//console.log(q_);
 		N_o += q_.qo_;

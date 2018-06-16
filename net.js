@@ -8,24 +8,21 @@ var net = new brain.NeuralNetwork({
 var Res = require('./res.js').Res;
 var simulate = require('./simulator.js').simulate;
 
-
 var examples = [];
 
-//simulate(res, 2, [{loc: 5, p_bh: 1500}]);
-
-var timesteps = 5;
+var timesteps = 2;
 var gridblocks = 100;
 var res = new Res(gridblocks);
 //generate examples for use in neural network
-for(var i = 0; i < 40; i++){
+for(var i = 0; i < 70; i++){
 	var res = new Res(gridblocks);
 	var randNum;
-	var wells = [{loc: randNum = Math.floor(Math.random()*gridblocks), p_bh: 1500}];
+	var wells = [{loc: randNum = Math.floor(Math.random()*gridblocks), p_bh: 3350}];
 	//if(randNum == 18) console.log('rand ', randNum);
 	//res.addWells(wells);
 	examples[i] = {};
 	examples[i].input = linearize(res, timesteps, wells);
-	examples[i].output = [simulate(res, timesteps, [{loc: randNum, p_bh: 1500}])];
+	examples[i].output = [simulate(res, timesteps, [{loc: randNum, p_bh: 3350}])];
 }
 
 //console.log(examples);
@@ -39,7 +36,7 @@ net.train(examples, {
 //console.log(brain);
 //brain.test({input: examples.input, output: examples.output});
 var res1 = new Res(gridblocks);
-var wells1 = [{loc: 10, p_bh: 1500}];
+var wells1 = [{loc: 1, p_bh: 3350}];
 //res1.addWells(wells1)
 var nnVal, simVal;
 console.log('neural network ', nnVal = net.run(linearize(res1, timesteps, wells1)));

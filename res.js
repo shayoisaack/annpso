@@ -10,23 +10,23 @@ var extrapolate = require('./utilities.js').extrapolate;
 var swof = require('./pvt.js').swof;
 var pvt = require('./pvt.js').pvt;
 
-var res = {};
-res.cell = [];
-for(var i = 0; i < 100; i++){
-	res.cell[i] = new Cell(4500, 0.5, 100, 1000);
-}
+// var res = {};
+// res.cell = [];
+// for(var i = 0; i < 100; i++){
+// 	res.cell[i] = new Cell(4500, 0.3, 100, 1000);
+// }
 
 function Cell(p, poro, perm, dx){
 	this.p = p;
 	this.poro = poro;
 	this.kx = perm;
 	this.ky = perm;
-	this.kz = 20; //md
+	this.kz = perm/5; //md
 	this.qo_ = 0;
 	this.qw_ = 0;
 	this.dx = dx; //ft
 	this.dy = dx;
-	this.dz = 50;
+	this.dz = dx/20;
 	this.Sw = 0.3;
 	this.So = 1 - this.Sw;
 }
@@ -34,7 +34,7 @@ function Cell(p, poro, perm, dx){
 function Res(gridblocks){
 	this.cell = [];
 	for(var i = 0; i < gridblocks; i++){
-		this.cell[i] = new Cell(4500, 0.5, 100, 1000);
+		this.cell[i] = new Cell(4500, 0.3, 100, 1000);
 	}
 	this.Bo = function(i){
 		return extrapolate(this.cell[i].p, pvt.o[0], pvt.o[1]);
@@ -106,5 +106,5 @@ function Res(gridblocks){
 	}
 }
 
-exports.res = res;
+//exports.res = res;
 exports.Res = Res;
