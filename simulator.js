@@ -164,15 +164,17 @@ var simulate = function (res, timesteps, wells){
 		Pnew = gauss(A, darr);
 		//console.log('P_new = ', Pnew = gauss(A, darr), '\n');
 
+
+		//stop solving if any of the pressures is less than bottom hole
+		for(var wellIndex = 0; wellIndex < wells.length; wellIndex++){
+			if(Pnew[wells[wellIndex].loc] < wells[wellIndex].p_bh){
+				//console.log('\n', 'stop simulation, p < p_bh ', );
+				return N_o;
+			}
+		}
 		//calculate new saturations
 		var Swnew = [];
 		for(var i = 0; i < res.cell.length; i++){
-			//stop solving if any of the pressures is less than bottom hole
-			if(Pnew[i] < 1500){
-				console.log('\n', 'stop simulation, p < p_bh ', );
-				return N_o;
-			}
-
 			if(i == 0){
 				Pnew[-1] = 0;
 				//console.log('Txo_neg', Txo_neg);

@@ -1,7 +1,8 @@
 //var brain1 = require('./brain/lib/brain.js');
 var brain1 = require('brain.js');
 var brain = new brain1.NeuralNetwork({
-  activation: 'sigmoid', // activation function
+  activation: 'leaky-relu', // activation function
+  hiddenLayers: [10,5],
   learningRate: 0.6 // global learning rate, useful when training using streams
 });
 var Res = require('./res.js').Res;
@@ -13,7 +14,7 @@ var examples = [];
 
 //simulate(res, 2, [{loc: 5, p_bh: 1500}]);
 
-var timesteps = 2;
+var timesteps = 5;
 //generate examples for use in neural network
 for(var i = 0; i < 20; i++){
 	var res = new Res(20);
@@ -24,12 +25,12 @@ for(var i = 0; i < 20; i++){
 	examples[i].output = [simulate(res, timesteps, [{loc: i, p_bh: 1500}])];
 }
 
-//console.log(examples.slice(0,14));
+//console.log(examples);
 //train and test neural network on examples
 brain.train(examples, {
   errorThresh: 0.005,  // error threshold to reach
   iterations: 20000,   // maximum training iterations
-  log: true,            // number of iterations between logging
+  log: false,            // number of iterations between logging
   learningRate: 0.3    // learning rate
 });
 //console.log(brain);
@@ -63,8 +64,8 @@ function linearize(res, time, wells){
 	}
 
 	for(var i = 0; i < wells.length; i++){
-		arr[i] = wells[i].loc;
-		arr[i] = wells[i].p_bh;
+		arr[arr.length] = wells[i].loc;
+		arr[arr.length] = wells[i].p_bh;
 	}
 
 	arr[arr.length] = time;
