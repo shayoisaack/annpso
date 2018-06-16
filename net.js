@@ -2,7 +2,7 @@
 var brain1 = require('brain.js');
 var brain = new brain1.NeuralNetwork({
   activation: 'leaky-relu', // activation function
-  hiddenLayers: [10,5],
+  hiddenLayers: [10, 10],
   learningRate: 0.6 // global learning rate, useful when training using streams
 });
 var Res = require('./res.js').Res;
@@ -14,7 +14,7 @@ var examples = [];
 
 //simulate(res, 2, [{loc: 5, p_bh: 1500}]);
 
-var timesteps = 5;
+var timesteps = 3;
 //generate examples for use in neural network
 for(var i = 0; i < 20; i++){
 	var res = new Res(20);
