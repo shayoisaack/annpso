@@ -1,6 +1,6 @@
 //var brain1 = require('./brain/lib/brain.js');
-var brain1 = require('brain.js');
-var brain = new brain1.NeuralNetwork({
+var brain = require('brain.js');
+var net = new brain.NeuralNetwork({
   activation: 'leaky-relu', // activation function
   hiddenLayers: [10, 10],
   learningRate: 0.6 // global learning rate, useful when training using streams
@@ -8,26 +8,29 @@ var brain = new brain1.NeuralNetwork({
 var Res = require('./res.js').Res;
 var simulate = require('./simulator.js').simulate;
 
-var res = new Res(20);
 
 var examples = [];
 
 //simulate(res, 2, [{loc: 5, p_bh: 1500}]);
 
-var timesteps = 3;
+var timesteps = 5;
+var gridblocks = 100;
+var res = new Res(gridblocks);
 //generate examples for use in neural network
-for(var i = 0; i < 20; i++){
-	var res = new Res(20);
-	var wells = [{loc: i, p_bh: 1500}];
+for(var i = 0; i < 40; i++){
+	var res = new Res(gridblocks);
+	var randNum;
+	var wells = [{loc: randNum = Math.floor(Math.random()*gridblocks), p_bh: 1500}];
+	//if(randNum == 18) console.log('rand ', randNum);
 	//res.addWells(wells);
 	examples[i] = {};
 	examples[i].input = linearize(res, timesteps, wells);
-	examples[i].output = [simulate(res, timesteps, [{loc: i, p_bh: 1500}])];
+	examples[i].output = [simulate(res, timesteps, [{loc: randNum, p_bh: 1500}])];
 }
 
 //console.log(examples);
 //train and test neural network on examples
-brain.train(examples, {
+net.train(examples, {
   errorThresh: 0.005,  // error threshold to reach
   iterations: 20000,   // maximum training iterations
   log: false,            // number of iterations between logging
@@ -35,12 +38,13 @@ brain.train(examples, {
 });
 //console.log(brain);
 //brain.test({input: examples.input, output: examples.output});
-var res1 = new Res(20);
-var wells1 = [{loc: 18, p_bh: 1500}];
+var res1 = new Res(gridblocks);
+var wells1 = [{loc: 10, p_bh: 1500}];
 //res1.addWells(wells1)
-console.log('neural network ', brain.run(linearize(res1, timesteps, wells1)));
-console.log('simulator ', simulate(res1, timesteps, wells1));
-
+var nnVal, simVal;
+console.log('neural network ', nnVal = net.run(linearize(res1, timesteps, wells1)));
+console.log('simulator ', simVal = simulate(res1, timesteps, wells1));
+console.log('correlation ', 100 - Math.abs((simVal - nnVal))/simVal*100, '%');
 //console.log(brain);
 
 function linearize(res, time, wells){

@@ -183,6 +183,9 @@ var simulate = function (res, timesteps, wells){
 				Pnew[res.cell.length] = 0;
 			}
 			Swnew[i] = res.cell[i].Sw+1/Cswo[i]*(Txo_pos[i]*(Pnew[i+1]-Pnew[i])+Txo_neg[i]*(Pnew[i-1]-Pnew[i])-res.cell[i].qo_-Cpoo[i]*(Pnew[i]-res.cell[i].p));
+			if(Swnew[i] < 0){
+				return N_o;
+			}
 		}
 
 		//update pressures and saturations of reservoir
