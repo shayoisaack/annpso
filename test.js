@@ -1,41 +1,7 @@
+var simulate = require('./simulator2d.js').simulate;
+var Res = require('./res2d.js').Res;
 
-function Cell(p, poro, perm, dx){
-	this.p = p;
-	this.poro = poro;
-	this.kx = perm;
-	this.ky = perm;
-	this.kz = 20; //md
-	this.qo_ = 0;
-	this.qw_ = 0;
-	this.dx = dx; //ft
-	this.Sw = 0.3;
-	 Object.defineProperties(this, {
-        "So": {
-             "get": function() { 
-             	return 1 - this.Sw;
-             },
-             "set": function() { }
-        }
-    });
-}
+var res = new Res(20, 20);
+//console.log(JSON.stringify(res));
 
-var cell = new Cell(4500, 0.3, 100, 1000);
-console.log(cell);
-cell.Sw = 0.4;
-console.log(cell);
-
-// var o = {
-//   a: 7,
-//   get b() { 
-//     return this.a + 1;
-//   },
-//   set c(x) {
-//     this.a = x / 2;
-//   }
-// };
-
-// console.log(o.a); // 7
-// console.log(o.b); // 8
-// o.c = 50;
-// console.log(o.a); // 25
-// console.log(o);
+console.log(simulate(res, 2, [{loc:{x: 5, y: 10}, p_bh: 3350}]));

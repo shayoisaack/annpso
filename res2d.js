@@ -18,8 +18,9 @@ function Cell(p, poro, perm, dx){
 }
 
 function Res(gridblocksX, gridblocksY){
-	this.cell = [];
+	this.cell = [[]];
 	for(var i = 0; i < gridblocksX; i++){
+		this.cell[i] = [];
 		for(var j = 0; j < gridblocksY; j++){
 			this.cell[i][j] = new Cell(4500, 0.3, 100, 1000);
 		}
@@ -66,7 +67,7 @@ function Res(gridblocksX, gridblocksY){
 			var loc = wells[wellIndex].loc;
 			var re = Math.sqrt(this.cell[loc.x][loc.y].dy*this.cell[loc.x][loc.y].dx/Math.PI);
 			var rw = 0.25;//ft
-			var WC = 0.0001*2*Math.PI*this.cell[loc.x][loc.y].kx*this.cell[locx][loc.y].dz/Math.log(re/rw);
+			var WC = 0.0001*2*Math.PI*this.cell[loc.x][loc.y].kx*this.cell[loc.x][loc.y].dz/Math.log(re/rw);
 
 			var Area = Math.PI*re^2;
 			var kro = extrapolate(this.cell[loc.x][loc.y].Sw, swof[0], swof[2]);
