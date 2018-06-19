@@ -1,0 +1,184 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <title>ANNPSO</title>
+    <meta name='viewport' content='initial-scale=1' />
+    <!-- 
+	<link rel='stylesheet' href='main.css'/> -->
+    <style>
+    * {
+        margin: 0;
+        padding: 0;
+        box-sizing: border-box;
+    }
+
+    html,
+    body {
+        background: white;
+        color: white;
+        height: 100%;
+    }
+
+    .box {
+        display: flex;
+        flex-flow: column;
+        height: 100%;
+    }
+
+    #main-box {
+        flex: 1 1 auto;
+    }
+
+    #header {
+        height: 50px;
+        flex: 0 1 50px;
+        background: white;
+        border-bottom: 1px solid rgba(0,0,0,0.2);
+        display: block;
+    }
+
+    .header-item{
+    	line-height: 50px;
+    	color: rgba(0,0,0,0.5);
+    	margin-left: 10px;
+    	font-weight: bold;
+    	cursor: pointer;
+    }
+
+    .selected{
+    	color: rgba(0,0,0,0.8);
+    }
+
+    #main {
+        float: left;
+        width: 74%;
+        height: 100%;
+        flex: 1 1 auto;
+        padding: 10px;
+        box-sizing: border-box;
+    }
+
+    #controls {
+        float: right;
+        width: 26%;
+        height: 100%;
+        border-left: 1px solid rgba(0, 0, 0, 0.2);
+        flex: 1 1 auto;
+        box-sizing: border-box;
+    }
+
+    #myCanvas {
+        border: 0.5px solid #ddd;
+        margin: 10px;
+    }
+
+    table {
+        border-collapse: collapse;
+    }
+
+    td {
+        border: 1px solid #ddd;
+        /*rgba(0,0,0,0.2);*/
+        margin: 0;
+        padding: 0;
+    }
+    </style>
+    <!-- 
+    <script src='main.js'></script> -->
+</head>
+
+<body>
+    <div id='header' class='box'>
+    	<span class='header-item'>Reservoir</span>
+    	<span class='header-item selected'>Simulate</span>
+    	<span class='header-item'>Solve</span>
+    </div>
+    <!--   <div id='main-box' class='box'> -->
+    <div id='main'>
+    </div>
+    <div id='controls'></div>
+    <!--  </div> -->
+</body>
+<script type="text/javascript" src="./jquery.js"></script>
+<script src="/socket.io/socket.io.js"></script>
+<script>
+var socket = io();
+socket.on('chat message', function(msg) {
+    console.log(msg);
+});
+</script>
+<script>
+function drawGrid(res) {
+    var gridblocks = res.cell.length;
+    var gridSize = $('#main').width() / 2;
+    var $grid = $('<table style="border: 1px solid black; margin: 0; padding: 0; width: ' + gridSize + 'px; height: ' + gridSize + 'px"></table>');
+    var cellSize = 1 / gridblocks * 100;
+    var counter = 0;
+    for (var i = 0; i < gridblocks; i++) {
+        $row = $('<tr></tr>');
+        for (var j = 0; j < gridblocks; j++) {
+            $td = $('<td></td>');
+            $td.attr('id', counter);
+            $td.data('x', i);
+            $td.data('y', j);
+            $td.css('width', cellSize + '%');
+            $td.css('height', cellSize + '%');
+            $td.css('background', getColorForPercentage(res.cell[i][j].p / res.Pi));
+            $row.append($td);
+        }
+        counter++;
+        $grid.append($row);
+    }
+    $('#main').html($grid);
+}
+//drawGrid(50);
+
+$('td').on('click', function(e) {
+    $(this).css('background', getColorForPercentage($(this).data('x') / 50));
+    console.log($(this).data('x'), $(this).data('y'));
+    socket.emit('chat message', $(this).data('x'));
+})
+
+var percentColors = [
+    { pct: 0.0, color: { r: 0xff, g: 0x00, b: 0 } },
+    { pct: 0.5, color: { r: 0xff, g: 0xff, b: 0 } },
+    { pct: 1.0, color: { r: 0x00, g: 0xff, b: 0 } }
+];
+
+var getColorForPercentage = function(pct) {
+    for (var i = 1; i < percentColors.length - 1; i++) {
+        if (pct < percentColors[i].pct) {
+            break;
+        }
+    }
+    var lower = percentColors[i - 1];
+    var upper = percentColors[i];
+    var range = upper.pct - lower.pct;
+    var rangePct = (pct - lower.pct) / range;
+    var pctLower = 1 - rangePct;
+    var pctUpper = rangePct;
+    var color = {
+        r: Math.floor(lower.color.r * pctLower + upper.color.r * pctUpper),
+        g: Math.floor(lower.color.g * pctLower + upper.color.g * pctUpper),
+        b: Math.floor(lower.color.b * pctLower + upper.color.b * pctUpper)
+    };
+    return 'rgb(' + [color.r, color.g, color.b].join(',') + ')';
+    // or output as hex if preferred
+}
+</script>
+<script>
+socket.on('reservoir', function(res) {
+    console.log(res);
+    drawGrid(res);
+    setTimeout(function(){
+    	socket.emit('simulate', res, [{loc: {x: 1, y: 3}, p_bh: 3350}]);
+    }, 3000);
+});
+
+socket.on('simulation-result', function(N_o){
+	console.log('N_o', N_o);
+});
+</script>
+
+</html>

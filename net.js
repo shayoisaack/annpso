@@ -39,8 +39,8 @@ var res1 = new Res(gridblocks);
 var wells1 = [{loc: 1, p_bh: 3350}];
 //res1.addWells(wells1)
 var nnVal, simVal;
-console.log('neural network ', nnVal = net.run(linearize(res1, timesteps, wells1)));
 console.log('simulator ', simVal = simulate(res1, timesteps, wells1));
+console.log('neural network ', nnVal = net.run(linearize(res1, timesteps, wells1)));
 console.log('correlation ', 100 - Math.abs((simVal - nnVal))/simVal*100, '%');
 //console.log(brain);
 

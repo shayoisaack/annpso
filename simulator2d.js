@@ -105,7 +105,7 @@ var simulate = function(res, timesteps, wells) {
                 Csww[i][j] = res.cell[i][j].poro / res.Bw(i, j) / dt - res.dPcow_dSw(i, j) * Cpow[i][j];
                 //console.log('Cpow: ',Cpow, 'Cpoo', Cpoo, 'Cswo', Cswo, 'Csww', Csww);
 
-                alpha = -Cswo[i][j] / Csww[i][j];
+                alpha = - Cswo[i][j] / Csww[i][j];
                 //console.log(alpha);
 
                 if (i == 0 && j == 0) {
@@ -326,45 +326,57 @@ var simulate = function(res, timesteps, wells) {
                 console.log(a,b,c,d,e,f);
                 var fs = require('fs');
 
-                //var row =[];
-                //console.log(res.cell.length, res.cell[0].length);
-                for (var ri = 0; ri < res.cell.length * res.cell[0].length; ri++) {
-                    A[ri] = [];
-                    for (var rj = 0; rj < res.cell.length * res.cell[0].length; rj++) {
-                        //console.log(ri, rj);
-                        if (ri == rj + 1)
-                            A[ri][rj] = a;
-                        else if (ri == rj)
-                            A[ri][rj] = b;
-                        else if (ri == rj - 1)
-                            A[ri][rj] = c;
-                        else if (rj == ri + res.cell[0].length - 1)
-                            A[ri][rj] = f;
-                        else if (rj == ri - res.cell[0].length - 1)
-                            A[ri][rj] = e;
-                        else
-                            A[ri][rj] = 0;
-                    }
-                    fs.appendFileSync("/tmp/test", A[ri] + '\n');
-                }
-
                 darr.push(d);
             }
         }
 
         //}
 
+        //var row =[];
+        var B = [
+            []
+        ];
+        //console.log(res.cell.length, res.cell[0].length);
+        for (var ri = 0; ri < res.cell.length * res.cell[0].length; ri++) {
+            A[ri] = [];
+            B[ri] = [];
+            for (var rj = 0; rj < res.cell.length * res.cell[0].length; rj++) {
+                //console.log(ri, rj);
+                if (ri == rj + 1) {
+                    A[ri][rj] = a;
+                    B[ri][rj] = 'a';
+                } else if (ri == rj) {
+                    A[ri][rj] = b;
+                    B[ri][rj] = 'b';
+                } else if (ri == rj - 1) {
+                    A[ri][rj] = c;
+                    B[ri][rj] = 'c';
+                } else if (rj == ri + res.cell[0].length - 1) {
+                    A[ri][rj] = f;
+                    B[ri][rj] = 'f';
+                } else if (ri == rj + res.cell.length - 1) {
+                    A[ri][rj] = e;
+                    B[ri][rj] = 'e';
+                } else {
+                    A[ri][rj] = 0;
+                    B[ri][rj] = 0;
+                }
+            }
+            fs.appendFileSync("/tmp/test", A[ri] + '\n');
+        }
+        //fs.appendFileSync("/tmp/test", '\n');
+
         var Pnew = [];
-        //console.log('A = ', A, '\n');
+        //console.log('A = ', B, '\n');
         //console.log('d = ', darr, '\n');
         P_new = gauss(A, darr);
         var Pnew = arrayToMatrix(P_new, res.cell[0].length);
-        //console.log('P_new = ', P_new = gauss(A, darr), '\n');
+        //console.log('P_new = ', Pnew, '\n');
 
         //stop solving if any of the pressures is less than bottom hole
         for (var wellIndex = 0; wellIndex < wells.length; wellIndex++) {
             if (Pnew[wells[wellIndex].loc.x][wells[wellIndex].loc.y] < wells[wellIndex].p_bh) {
-                console.log('stop simulation, p < p_bh ', );
+                //console.log('stop simulation: p < p_bh, timestep: ', timeIndex);
                 return N_o;
             }
         }
@@ -386,7 +398,7 @@ var simulate = function(res, timesteps, wells) {
         }
 
         //calculate new saturations
-        console.log(Pnew);
+        //console.log(Pnew);
         var Swnew = [
             []
         ];
@@ -430,7 +442,7 @@ var simulate = function(res, timesteps, wells) {
         //console.log('P_new = ', Pnew, '\n');
         //console.log('Sw_new = ', Swnew, '\n');
 
-        console.log('res = ', res);
+        //console.log('res = ', res);
 
         //go to next timestep
     }
