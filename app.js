@@ -15,7 +15,7 @@ app.get('/', function(req, res){
 var simulate = require('./simulator2d-app.js').simulate;
 var Res = require('./res2d.js').Res;
 
-var res = new Res(5, 5);
+var res = new Res(50, 50);
 
 io.on('connection', function(socket){
   console.log('connected'); 
@@ -33,7 +33,7 @@ io.on('connection', function(socket){
   // });
   //when disconnected
   socket.on('disconnect', function(){
-    console.log('user disconnected');
+    console.log('disconnected');
   });
 });
 

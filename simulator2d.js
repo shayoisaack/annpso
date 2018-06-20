@@ -105,7 +105,7 @@ var simulate = function(res, timesteps, wells) {
                 Csww[i][j] = res.cell[i][j].poro / res.Bw(i, j) / dt - res.dPcow_dSw(i, j) * Cpow[i][j];
                 //console.log('Cpow: ',Cpow, 'Cpoo', Cpoo, 'Cswo', Cswo, 'Csww', Csww);
 
-                alpha = - Cswo[i][j] / Csww[i][j];
+                alpha = -Cswo[i][j] / Csww[i][j];
                 //console.log(alpha);
 
                 if (i == 0 && j == 0) {
@@ -165,26 +165,25 @@ var simulate = function(res, timesteps, wells) {
                     Tyw_pos[i][j] = 2 * lambda_y_w_pos / res.cell[i][j].dy / (res.cell[i][j + 1].dy / res.cell[i][j + 1].ky + res.cell[i][j].dy / res.cell[i][j].ky);
                     Tyw_neg[i][j] = 0; //2*lambda_y_w_neg/res.cell[i][j].dy/(res.cell[i][j-1].dy/res.cell[i][j-1].ky + res.cell[i][j].dy/res.cell[i][j].ky);
                     d = (Cpoo[i][j] + alpha * Cpow[i][j]) * res.cell[i][j].p - res.cell[i][j].qo_ - alpha * res.cell[i][j].qw_ - alpha * Txw_neg[i][j] * (res.p_cow(i - 1, j) - res.p_cow(i, j)) - alpha * Tyw_pos[i][j] * (res.p_cow(i, j + 1) - res.p_cow(i, j));
-                } else if (i == res.cell.length && j == 0) {
-                    lambda_x_o_pos = (res.cell[i + 1][j].p >= res.cell[i][j].p) ? res.cell[i + 1][j].kx / res.visc_o(i + 1, j) / res.Bo(i + 1, j) : res.cell[i][j].kx / res.visc_o(i, j) / res.Bo(i, j);
-                    lambda_x_o_neg = 0; //(res.cell[i-1][j].p) >= res.cell[i][j].p?res.cell[i-1][j].kx/res.visc_o(i-1,j)/res.Bo(i-1,j):res.cell[i][j].kx/res.visc_o(i,j)/res.Bo(i,j);
-                    lambda_x_w_pos = (res.cell[i + 1][j].p >= res.cell[i][j].p) ? res.cell[i + 1][j].kx / res.visc_w(i + 1, j) / res.Bw(i + 1, j) : res.cell[i][j].kx / res.visc_w(i, j) / res.Bw(i, j);
-                    lambda_x_w_neg = 0; //(res.cell[i-1][j].p) >= res.cell[i][j].p?res.cell[i-1][j].kx/res.visc_w(i-1,j)/res.Bw(i-1,j):res.cell[i][j].kx/res.visc_w(i,j)/res.Bw(i,j);
-                    lambda_y_o_pos = 0; //(res.cell[i][j+1].p >= res.cell[i][j].p)?res.cell[i][j+1].ky/res.visc_o(i,j+1)/res.Bo(i,j+1):res.cell[i][j].ky/res.visc_o(i,j)/res.Bo(i,j);
-                    lambda_y_o_neg = (res.cell[i][j - 1].p) >= res.cell[i][j].p ? res.cell[i][j - 1].ky / res.visc_o(i, j - 1) / res.Bo(i, j - 1) : res.cell[i][j].ky / res.visc_o(i, j) / res.Bo(i, j);
-                    lambda_y_w_pos = 0; //(res.cell[i][j+1].p >= res.cell[i][j].p)?res.cell[i][j+1].ky/res.visc_w(i,j+1)/res.Bw(i,j+1):res.cell[i][j].ky/res.visc_w(i,j)/res.Bw(i,j);
-                    lambda_y_w_neg = (res.cell[i][j - 1].p) >= res.cell[i][j].p ? res.cell[i][j - 1].ky / res.visc_w(i, j - 1) / res.Bw(i, j - 1) : res.cell[i][j].ky / res.visc_w(i, j) / res.Bw(i, j);
+                } else if (i == res.cell.length-1 && j == 0) {
+                    lambda_x_o_pos = 0;//(res.cell[i + 1][j].p >= res.cell[i][j].p) ? res.cell[i + 1][j].kx / res.visc_o(i + 1, j) / res.Bo(i + 1, j) : res.cell[i][j].kx / res.visc_o(i, j) / res.Bo(i, j);
+                    lambda_x_o_neg = (res.cell[i-1][j].p) >= res.cell[i][j].p?res.cell[i-1][j].kx/res.visc_o(i-1,j)/res.Bo(i-1,j):res.cell[i][j].kx/res.visc_o(i,j)/res.Bo(i,j);
+                    lambda_x_w_pos = 0;//(res.cell[i + 1][j].p >= res.cell[i][j].p) ? res.cell[i + 1][j].kx / res.visc_w(i + 1, j) / res.Bw(i + 1, j) : res.cell[i][j].kx / res.visc_w(i, j) / res.Bw(i, j);
+                    lambda_x_w_neg = (res.cell[i-1][j].p) >= res.cell[i][j].p?res.cell[i-1][j].kx/res.visc_w(i-1,j)/res.Bw(i-1,j):res.cell[i][j].kx/res.visc_w(i,j)/res.Bw(i,j);
+                    lambda_y_o_pos = (res.cell[i][j+1].p >= res.cell[i][j].p)?res.cell[i][j+1].ky/res.visc_o(i,j+1)/res.Bo(i,j+1):res.cell[i][j].ky/res.visc_o(i,j)/res.Bo(i,j);
+                    lambda_y_o_neg = 0;//(res.cell[i][j - 1].p) >= res.cell[i][j].p ? res.cell[i][j - 1].ky / res.visc_o(i, j - 1) / res.Bo(i, j - 1) : res.cell[i][j].ky / res.visc_o(i, j) / res.Bo(i, j);
+                    lambda_y_w_pos = (res.cell[i][j+1].p >= res.cell[i][j].p)?res.cell[i][j+1].ky/res.visc_w(i,j+1)/res.Bw(i,j+1):res.cell[i][j].ky/res.visc_w(i,j)/res.Bw(i,j);
+                    lambda_y_w_neg = 0;//(res.cell[i][j - 1].p) >= res.cell[i][j].p ? res.cell[i][j - 1].ky / res.visc_w(i, j - 1) / res.Bw(i, j - 1) : res.cell[i][j].ky / res.visc_w(i, j) / res.Bw(i, j);
 
-                    Txo_pos[i][j] = 2 * lambda_x_o_pos / res.cell[i][j].dx / (res.cell[i + 1][j].dx / res.cell[i + 1][j].kx + res.cell[i][j].dx / res.cell[i][j].kx);
-                    Txo_neg[i][j] = 0; //2*lambda_x_o_neg/res.cell[i][j].dx/(res.cell[i-1][j].dx/res.cell[i-1][j].kx + res.cell[i][j].dx/res.cell[i][j].kx);
-                    Txw_pos[i][j] = 2 * lambda_x_w_pos / res.cell[i][j].dx / (res.cell[i + 1][j].dx / res.cell[i + 1][j].kx + res.cell[i][j].dx / res.cell[i][j].kx);
-                    Txw_neg[i][j] = 0; //2*lambda_x_w_neg/res.cell[i][j].dx/(res.cell[i-1][j].dx/res.cell[i-1][j].kx + res.cell[i][j].dx/res.cell[i][j].kx);
-                    Tyo_pos[i][j] = 0; //2*lambda_y_o_pos/res.cell[i][j].dy/(res.cell[i][j+1].dy/res.cell[i][j+1].ky + res.cell[i][j].dy/res.cell[i][j].ky);
-                    Tyo_neg[i][j] = 2 * lambda_y_o_neg / res.cell[i][j].dy / (res.cell[i][j - 1].dy / res.cell[i][j - 1].ky + res.cell[i][j].dy / res.cell[i][j].ky);
-                    Tyw_pos[i][j] = 0; //2*lambda_y_w_pos/res.cell[i][j].dy/(res.cell[i][j+1].dy/res.cell[i][j+1].ky + res.cell[i][j].dy/res.cell[i][j].ky);
-                    Tyw_neg[i][j] = 2 * lambda_y_w_neg / res.cell[i][j].dy / (res.cell[i][j - 1].dy / res.cell[i][j - 1].ky + res.cell[i][j].dy / res.cell[i][j].ky);
-                    d = (Cpoo[i][j] + alpha * Cpow[i][j]) * res.cell[i][j].p - res.cell[i][j].qo_ - alpha * res.cell[i][j].qw_ - alpha * Txw_pos[i][j] * (res.p_cow(i + 1, j) - res.p_cow(i, j)) - alpha * Tyw_neg[i][j] * (res.p_cow(i, j - 1) - res.p_cow(i, j));
-
+                    Txo_pos[i][j] = 0;//2 * lambda_x_o_pos / res.cell[i][j].dx / (res.cell[i + 1][j].dx / res.cell[i + 1][j].kx + res.cell[i][j].dx / res.cell[i][j].kx);
+                    Txo_neg[i][j] = 2*lambda_x_o_neg/res.cell[i][j].dx/(res.cell[i-1][j].dx/res.cell[i-1][j].kx + res.cell[i][j].dx/res.cell[i][j].kx);
+                    Txw_pos[i][j] = 0;//2 * lambda_x_w_pos / res.cell[i][j].dx / (res.cell[i + 1][j].dx / res.cell[i + 1][j].kx + res.cell[i][j].dx / res.cell[i][j].kx);
+                    Txw_neg[i][j] = 2*lambda_x_w_neg/res.cell[i][j].dx/(res.cell[i-1][j].dx/res.cell[i-1][j].kx + res.cell[i][j].dx/res.cell[i][j].kx);
+                    Tyo_pos[i][j] = 2*lambda_y_o_pos/res.cell[i][j].dy/(res.cell[i][j+1].dy/res.cell[i][j+1].ky + res.cell[i][j].dy/res.cell[i][j].ky);
+                    Tyo_neg[i][j] = 0;//2 * lambda_y_o_neg / res.cell[i][j].dy / (res.cell[i][j - 1].dy / res.cell[i][j - 1].ky + res.cell[i][j].dy / res.cell[i][j].ky);
+                    Tyw_pos[i][j] = 2*lambda_y_w_pos/res.cell[i][j].dy/(res.cell[i][j+1].dy/res.cell[i][j+1].ky + res.cell[i][j].dy/res.cell[i][j].ky);
+                    Tyw_neg[i][j] = 0;//2 * lambda_y_w_neg / res.cell[i][j].dy / (res.cell[i][j - 1].dy / res.cell[i][j - 1].ky + res.cell[i][j].dy / res.cell[i][j].ky);
+                    d = (Cpoo[i][j] + alpha * Cpow[i][j]) * res.cell[i][j].p - res.cell[i][j].qo_ - alpha * res.cell[i][j].qw_ - alpha * Txw_neg[i][j] * (res.p_cow(i - 1, j) - res.p_cow(i, j)) - alpha * Tyw_pos[i][j] * (res.p_cow(i, j + 1) - res.p_cow(i, j));
                 } else if (i == 0 && j == res.cell[0].length - 1) {
                     lambda_x_o_pos = (res.cell[i + 1][j].p >= res.cell[i][j].p) ? res.cell[i + 1][j].kx / res.visc_o(i + 1, j) / res.Bo(i + 1, j) : res.cell[i][j].kx / res.visc_o(i, j) / res.Bo(i, j);
                     lambda_x_o_neg = 0; //(res.cell[i-1][j].p) >= res.cell[i][j].p?res.cell[i-1][j].kx/res.visc_o(i-1,j)/res.Bo(i-1,j):res.cell[i][j].kx/res.visc_o(i,j)/res.Bo(i,j);
@@ -243,7 +242,7 @@ var simulate = function(res, timesteps, wells) {
                     Tyw_pos[i][j] = 2 * lambda_y_w_pos / res.cell[i][j].dy / (res.cell[i][j + 1].dy / res.cell[i][j + 1].ky + res.cell[i][j].dy / res.cell[i][j].ky);
                     Tyw_neg[i][j] = 2 * lambda_y_w_neg / res.cell[i][j].dy / (res.cell[i][j - 1].dy / res.cell[i][j - 1].ky + res.cell[i][j].dy / res.cell[i][j].ky);
                     d = (Cpoo[i][j] + alpha * Cpow[i][j]) * res.cell[i][j].p - res.cell[i][j].qo_ - alpha * res.cell[i][j].qw_ - alpha * Txw_pos[i][j] * (res.p_cow(i + 1, j) - res.p_cow(i, j)) - alpha * Tyw_pos[i][j] * (res.p_cow(i, j + 1) - res.p_cow(i, j)) - alpha * Tyw_neg[i][j] * (res.p_cow(i, j - 1) - res.p_cow(i, j));
-                } else if (j == res.cell.length - 1) {
+                } else if (j == res.cell[0].length - 1) {
                     lambda_x_o_pos = (res.cell[i + 1][j].p >= res.cell[i][j].p) ? res.cell[i + 1][j].kx / res.visc_o(i + 1, j) / res.Bo(i + 1, j) : res.cell[i][j].kx / res.visc_o(i, j) / res.Bo(i, j);
                     lambda_x_o_neg = (res.cell[i - 1][j].p) >= res.cell[i][j].p ? res.cell[i - 1][j].kx / res.visc_o(i - 1, j) / res.Bo(i - 1, j) : res.cell[i][j].kx / res.visc_o(i, j) / res.Bo(i, j);
                     lambda_x_w_pos = (res.cell[i + 1][j].p >= res.cell[i][j].p) ? res.cell[i + 1][j].kx / res.visc_w(i + 1, j) / res.Bw(i + 1, j) : res.cell[i][j].kx / res.visc_w(i, j) / res.Bw(i, j);
@@ -262,7 +261,7 @@ var simulate = function(res, timesteps, wells) {
                     Tyw_pos[i][j] = 0; //2*lambda_y_w_pos/res.cell[i][j].dy/(res.cell[i][j+1].dy/res.cell[i][j+1].ky + res.cell[i][j].dy/res.cell[i][j].ky);
                     Tyw_neg[i][j] = 2 * lambda_y_w_neg / res.cell[i][j].dy / (res.cell[i][j - 1].dy / res.cell[i][j - 1].ky + res.cell[i][j].dy / res.cell[i][j].ky);
                     d = (Cpoo[i][j] + alpha * Cpow[i][j]) * res.cell[i][j].p - res.cell[i][j].qo_ - alpha * res.cell[i][j].qw_ - alpha * Txw_pos[i][j] * (res.p_cow(i + 1, j) - res.p_cow(i, j)) - alpha * Txw_neg[i][j] * (res.p_cow(i - 1, j) - res.p_cow(i, j)) - alpha * Tyw_neg[i][j] * (res.p_cow(i, j - 1) - res.p_cow(i, j));
-                } else if (i == res.cell[0].length - 1) {
+                } else if (i == res.cell.length - 1) {
                     lambda_x_o_pos = 0; //(res.cell[i+1][j].p >= res.cell[i][j].p)?res.cell[i+1][j].kx/res.visc_o(i+1,j)/res.Bo(i+1,j):res.cell[i][j].kx/res.visc_o(i,j)/res.Bo(i,j);
                     lambda_x_o_neg = (res.cell[i - 1][j].p) >= res.cell[i][j].p ? res.cell[i - 1][j].kx / res.visc_o(i - 1, j) / res.Bo(i - 1, j) : res.cell[i][j].kx / res.visc_o(i, j) / res.Bo(i, j);
                     lambda_x_w_pos = 0; //(res.cell[i+1][j].p >= res.cell[i][j].p)?res.cell[i+1][j].kx/res.visc_w(i+1,j)/res.Bw(i+1,j):res.cell[i][j].kx/res.visc_w(i,j)/res.Bw(i,j);
@@ -282,6 +281,7 @@ var simulate = function(res, timesteps, wells) {
                     Tyw_neg[i][j] = 2 * lambda_y_w_neg / res.cell[i][j].dy / (res.cell[i][j - 1].dy / res.cell[i][j - 1].ky + res.cell[i][j].dy / res.cell[i][j].ky);
                     d = (Cpoo[i][j] + alpha * Cpow[i][j]) * res.cell[i][j].p - res.cell[i][j].qo_ - alpha * res.cell[i][j].qw_ - alpha * Txw_neg[i][j] * (res.p_cow(i - 1, j) - res.p_cow(i, j)) - alpha * Tyw_pos[i][j] * (res.p_cow(i, j + 1) - res.p_cow(i, j)) - alpha * Tyw_neg[i][j] * (res.p_cow(i, j - 1) - res.p_cow(i, j));
                 } else {
+
                     lambda_x_o_pos = (res.cell[i + 1][j].p >= res.cell[i][j].p) ? res.cell[i + 1][j].kx / res.visc_o(i + 1, j) / res.Bo(i + 1, j) : res.cell[i][j].kx / res.visc_o(i, j) / res.Bo(i, j);
                     lambda_x_o_neg = (res.cell[i - 1][j].p) >= res.cell[i][j].p ? res.cell[i - 1][j].kx / res.visc_o(i - 1, j) / res.Bo(i - 1, j) : res.cell[i][j].kx / res.visc_o(i, j) / res.Bo(i, j);
                     lambda_x_w_pos = (res.cell[i + 1][j].p >= res.cell[i][j].p) ? res.cell[i + 1][j].kx / res.visc_w(i + 1, j) / res.Bw(i + 1, j) : res.cell[i][j].kx / res.visc_w(i, j) / res.Bw(i, j);
@@ -323,7 +323,7 @@ var simulate = function(res, timesteps, wells) {
                 // d = Math.trunc(d);
                 // e = Math.trunc(e);
                 // f = Math.trunc(f);
-                console.log(a,b,c,d,e,f);
+                //console.log(a, b, c, d, e, f);
                 var fs = require('fs');
 
                 darr.push(d);
@@ -331,7 +331,6 @@ var simulate = function(res, timesteps, wells) {
         }
 
         //}
-
         //var row =[];
         var B = [
             []
@@ -364,20 +363,21 @@ var simulate = function(res, timesteps, wells) {
             }
             fs.appendFileSync("/tmp/test", A[ri] + '\n');
         }
-        //fs.appendFileSync("/tmp/test", '\n');
+        fs.appendFileSync("/tmp/test", '\n');
+        fs.appendFileSync("/tmp/test", darr);
 
         var Pnew = [];
         //console.log('A = ', B, '\n');
         //console.log('d = ', darr, '\n');
         P_new = gauss(A, darr);
         var Pnew = arrayToMatrix(P_new, res.cell[0].length);
-        //console.log('P_new = ', Pnew, '\n');
+        console.log('P_new = ', Pnew, '\n');
 
         //stop solving if any of the pressures is less than bottom hole
         for (var wellIndex = 0; wellIndex < wells.length; wellIndex++) {
             if (Pnew[wells[wellIndex].loc.x][wells[wellIndex].loc.y] < wells[wellIndex].p_bh) {
                 //console.log('stop simulation: p < p_bh, timestep: ', timeIndex);
-                return N_o;
+                return returnModule();
             }
         }
 
@@ -405,7 +405,6 @@ var simulate = function(res, timesteps, wells) {
         for (var i = 0; i < res.cell.length; i++) {
             Swnew[i] = [];
             for (var i = 0; j < res.cell[0].length; j++) {
-                console.log(i, j);
                 if (i == 0 && j == 0) {
                     Pnew[i - 1][j - 1] = 0;
                 } else if (i == res.cell.length - 1 && j == res.cell[0].length - 1) {
@@ -425,7 +424,7 @@ var simulate = function(res, timesteps, wells) {
                 }
                 Swnew[i][j] = res.cell[i][j].Sw + 1 / Cswo[i][j] * (Txo_pos[i][j] * (Pnew[i + 1][j] - Pnew[i][j]) + Txo_neg[i][j] * (Pnew[i - 1][j] - Pnew[i][j]) + Tyo_pos * (Pnew[i][j + 1] - Pnew[i][j]) + Tyo_neg[i][j] * (Pnew[i][j - 1] - Pnew[i][j]) - res.cell[i][j].qo_ - Cpoo[i][j] * (Pnew[i][j] - res.cell[i][j].p));
                 if (Swnew[i][j] < 0) {
-                    return N_o;
+                    return returnModule();
                 }
             }
         }
@@ -447,9 +446,13 @@ var simulate = function(res, timesteps, wells) {
         //go to next timestep
     }
 
+    function returnModule() {
+        return N_o;
+    }
+
     //console.log('N_o ', N_o);
     //console.log('N_w ' ,N_w);
-    return N_o;
+    return returnModule();
 }
 
 exports.simulate = simulate;

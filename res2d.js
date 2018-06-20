@@ -41,7 +41,7 @@ function Res(gridblocksX, gridblocksY) {
         }
     }
     this.Bo = function(i, j) {
-        return extrapolate(this.cell[i][i].p, pvt.o[0], pvt.o[1]);
+        return extrapolate(this.cell[i][j].p, pvt.o[0], pvt.o[1]);
     }
 
     this.d1_Bo_dPo = function(i, j) {
