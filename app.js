@@ -3,6 +3,11 @@ var app = express();
 var http = require('http').Server(app);
 var io = require('socket.io')(http);
 var Promise = require('promise');
+var clone = require('clone');
+
+
+io.set('heartbeat timeout', 60000); 
+io.set('heartbeat interval', 60000);
 
 app.set('views', __dirname + '/views');
 app.engine('html', require('ejs').renderFile);
@@ -31,17 +36,20 @@ io.on('connection', function(socket) {
 
     socket.on('simulate-simulator', function(resObj, wellsObj) {
         console.log('res ', resObj);
-        var promise = new Promise(function(resolve, reject) {
-            try {
-                var result = simulate(res, wellsObj, 1);
-            } catch (err) {
-                reject(err);
-            }
-            resolve(result);
-        });
-        promise.then(function(result) {
-            io.emit('simulate-simulator-final', result);
-        });
+        // var promise = new Promise(function(resolve, reject) {
+        //     try {
+        //         res = simulate(res, wellsObj, 1);
+        //     } catch (err) {
+        //         reject(err);
+        //     }
+        //     resolve(res);
+        // });
+        // promise.then(function(result) {
+        // 	console.log('resolving promise');
+        //     io.emit('simulate-simulator-final', res);
+        // });
+        res = simulate(res, [{loc: {x: 2, y: 2}, p_bh: 3350}], 10);
+        io.emit('simulate-simulator-final', clone(res));
         console.log('after promise..');
     });
     //when disconnected

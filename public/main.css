@@ -1,0 +1,170 @@
+* {
+        margin: 0;
+        padding: 0;
+        box-sizing: border-box;
+    }
+
+    html,
+    body {
+        background: white;
+        color: rgba(0, 0, 0, 0.6);
+        height: 100%;
+    }
+
+    .box {
+        display: flex;
+        flex-flow: column;
+        height: 100%;
+    }
+
+    #main-box {
+        flex: 1 1 auto;
+    }
+
+    #header {
+        height: 50px;
+        flex: 0 1 50px;
+        background: white;
+        border-bottom: 1px solid rgba(0, 0, 0, 0.2);
+        display: block;
+    }
+
+    .header-item {
+        line-height: 50px;
+        color: rgba(0, 0, 0, 0.5);
+        margin-left: 10px;
+        font-weight: bold;
+        cursor: pointer;
+    }
+
+    .selected {
+        color: rgba(0, 0, 0, 0.8);
+    }
+
+    #main {
+        float: left;
+        width: 74%;
+        height: 100%;
+        flex: 1 1 auto;
+        padding: 10px;
+        box-sizing: border-box;
+    }
+
+    #controls {
+        float: right;
+        width: 26%;
+        height: 100%;
+        border-left: 1px solid rgba(0, 0, 0, 0.2);
+        flex: 1 1 auto;
+        box-sizing: border-box;
+    }
+
+    #myCanvas {
+        border: 0.5px solid #ddd;
+        margin: 10px;
+    }
+
+    table {
+        border-collapse: collapse;
+    }
+
+    td {
+        border: 1px solid #ddd;
+        /*rgba(0,0,0,0.2);*/
+        margin: 0;
+        padding: 0;
+    }
+
+    .right {
+        float: right;
+        margin-right: 10px;
+    }
+
+    .section {
+        min-height: 100px;
+        border-bottom: 1px solid rgba(0, 0, 0, 0.2);
+        padding: 10px;
+    }
+
+    .section-header {
+        font-weight: bold;
+        padding: 0px 0px 4px 0px;
+        font: 1.3em;
+        color: rgba(0, 0, 0, 0.8);
+    }
+
+    .button {
+        padding: 10px;
+        margin: 0 10px 4px 0px;
+        background: green;
+        color: white;
+        display: inline-block;
+        cursor: pointer;
+    }
+
+    #map,
+    #other {
+        width: 50%;
+        float: left;
+    }
+
+    #other {
+        /*background: blue;*/
+        height: 200px;
+        padding-left: 10px;
+        /*width: 48%;*/
+    }
+
+    #choose-res {
+        display: block;
+        width: 50%;
+        padding: 6px;
+        margin-top: 10px;
+        position: relative;
+        top: 4px;
+    }
+
+    #colorbar {
+        height: 20px;
+        margin-bottom: 4px;
+        background: linear-gradient(to right, red, green);
+    }
+
+    #labels {
+        width: 100%;
+    }
+
+    .label {
+        float: left;
+        width: 33.3%;
+    }
+
+    .left {
+        float: left;
+    }
+
+    #chart-box {
+        width: 100%;
+        height: 300px;
+        background: rgba(0, 0, 0, 0.05);
+        margin: 25px 0 10px 0;
+        padding: 25px 5px 0 5px;
+    }
+
+    #other-info {
+        width: 100%;
+        height: 150px;
+        background: rgba(0, 0, 0, 0.05);
+        margin: 10px 0 10px 0;
+        font-size: 0.9em;
+        padding: 10px;
+    }
+
+    .row {
+        width: 100%;
+        margin-bottom: 8px;
+    }
+
+    .row-item {
+        padding: 0 10px 0 0;
+    }

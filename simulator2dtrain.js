@@ -119,7 +119,6 @@ var simulate = function(res, wells, timesteps) {
                     Tyw_pos[i][j] = 2 * lambda_y_w_pos / res.cell[i][j].dy / (res.cell[i][j + 1].dy / res.cell[i][j + 1].ky + res.cell[i][j].dy / res.cell[i][j].ky);
                 }
 
-                console.log(i, j);
                 Txo_neg[i][j] = Txo_neg[i][j] * 0.001127;
                 Txo_pos[i][j] = Txo_pos[i][j] * 0.001127;
                 Txw_neg[i][j] = Txw_neg[i][j] * 0.001127;
@@ -212,7 +211,7 @@ var simulate = function(res, wells, timesteps) {
         for (var wellIndex = 0; wellIndex < wells.length; wellIndex++) {
             if (Pnew[wells[wellIndex].loc.x][wells[wellIndex].loc.y] < wells[wellIndex].p_bh) {
                 //console.log('stop simulation: p < p_bh, timestep: ', timeIndex);
-                //return returnModule();
+                return returnModule();
             }
         }
 
@@ -270,7 +269,7 @@ var simulate = function(res, wells, timesteps) {
                     Cpoo[i][j] * (Pnew[i][j] - res.cell[i][j].p)
                 );
                 if (Swnew[i][j] < 0) {
-                    //return returnModule();
+                    return returnModule();
                 }
             }
         }
