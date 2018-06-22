@@ -10,7 +10,7 @@ var simulate = require('./simulator2d-server.js').simulate;
 var examples = [];
 
 var timesteps = 2;
-var gridblocks = 20;
+var gridblocks = 50;
 var res = new Res(gridblocks, gridblocks);
 
 //generate examples for use in neural network
@@ -34,12 +34,22 @@ net.train(examples, {
 var res1 = new Res(gridblocks, gridblocks);
 var wells1 = [{ loc: { x: 10, y: 5 }, p_bh: 3350 }];
 var nnVal, simVal;
-console.log('simulator ', simVal = simulate(res1, wells1, timesteps));
+var startDate = new Date();
+console.log('simulator ', simVal = simulate(res1, wells, timesteps));
+var endDate = new Date();
+var simTime = (endDate.getTime() - startDate.getTime())/1000;
+startDate = new Date();
 console.log('neural network ', nnVal = net.run(linearize(res1, wells1, timesteps)));
+endDate = new Date();
+var annTime = (endDate.getTime() - startDate.getTime())/1000;
 console.log('correlation ', 100 - Math.abs((simVal - nnVal)) / simVal * 100, '%');
+console.log('\n');
+console.log('simulator time ', simTime,'s');
+console.log('neural network time ', annTime, 's');
+console.log('improvement ', simTime/annTime);
 
 //linearize res properties from each cell for input to neural net
-function linearize(res, time, wells) {
+function linearize(res, wells, time) {
     var arr = [];
     for (var i = 0; i < res.cell.length; i++) {
         for (var j = 0; j < res.cell[0].length; j++) {

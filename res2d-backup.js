@@ -1,9 +1,8 @@
 var extrapolate = require('./utilities.js').extrapolate;
-var exists = require('./utilities.js').exists;
 var swof = require('./pvt.js').swof;
 var pvt = require('./pvt.js').pvt;
 
-function Cell(index, p, poro, perm, dx) {
+function Cell(p, poro, perm, dx) {
     this.p = p;
     this.poro = poro;
     this.kx = perm;
@@ -16,7 +15,9 @@ function Cell(index, p, poro, perm, dx) {
     this.dz = dx / 20;
     this.Sw = 0.3;
     this.So = 1 - this.Sw;
-    this.index = index;
+    this.calcCpoo = function(){
+        
+    }
     // this.Txo_neg = 0;
     // this.Txo_pos = 0;
     // this.Txw_neg = 0;
@@ -32,39 +33,14 @@ function Cell(index, p, poro, perm, dx) {
 }
 
 function Res(gridblocksX, gridblocksY) {
-    this.Pi = 8500; //psi
-    this.rows = gridblocksX;
-    this.cols = gridblocksY;
-    this.gridblocks = gridblocksX * gridblocksY;
-    this.getIndex = function(row, col) {
-        var index = 0;
-        var long, short;
-        if (gridblocksX > gridblocksY) {
-            long = gridblocksX;
-            short = gridblocksY;
-        } else {
-            long = gridblocksY;
-            short = gridblocksX;
-        }
-        for (var i = 0; i < long; i++) {
-            for (var j = 0; j < short; j++) {
-                if (i == row && j == col) {
-                    return index;
-                }
-                index++;
-            }
-        }
-        return undefined;
-    }
+    this.Pi = 8500;//psi
     this.cell = [
         []
     ];
-    var index = 0;
     for (var i = 0; i < gridblocksX; i++) {
         this.cell[i] = [];
         for (var j = 0; j < gridblocksY; j++) {
-            this.cell[i][j] = new Cell(index, 4500, 0.3, 100, 1000);
-            index++;
+            this.cell[i][j] = new Cell(8500, 0.3, 100, 1000);
         }
     }
     this.Bo = function(i, j) {
@@ -73,9 +49,9 @@ function Res(gridblocksX, gridblocksY) {
 
     this.d1_Bo_dPo = function(i, j) {
         var Bo1 = extrapolate(this.cell[i][j].p, pvt.o[0], pvt.o[1]);
-        var Bo2 = extrapolate(this.cell[i][j].p + 0.01, pvt.o[0], pvt.o[1]);
+        var Bo2 = extrapolate(this.cell[i][j].p + 1, pvt.o[0], pvt.o[1]);
 
-        return (1 / Bo2 - 1 / Bo1)/0.01; //dp = 0.01 psi
+        return 1 / Bo2 - 1 / Bo1; //dp = 1 psi
     }
 
     this.Bw = function(i, j) {
@@ -83,7 +59,7 @@ function Res(gridblocksX, gridblocksY) {
     }
 
     this.d1_Bw_dPw = function(i, j) {
-        return 1000*this.d1_Bo_dPo(i,j);//0;
+        return 0;
     }
 
     this.dPcow_dSw = function(i, j) {
@@ -101,16 +77,10 @@ function Res(gridblocksX, gridblocksY) {
     }
 
     this.p_cow = function(i, j) {
-        if (exists(this.cell, i, j)) {
-            return extrapolate(this.cell[i][j].Sw, swof[0], swof[3]);
-        } else {
-            return 1;
-        }
+        return extrapolate(this.cell[i][j].Sw, swof[0], swof[3]);
     }
     this.addWells = function(wells) {
         if (wells == undefined) wells = [];
-        var N_o = 0;
-        var N_w = 0;
         for (var wellIndex = 0; wellIndex < wells.length; wellIndex++) {
             var loc = wells[wellIndex].loc;
             var re = Math.sqrt(this.cell[loc.x][loc.y].dy * this.cell[loc.x][loc.y].dx / Math.PI);
@@ -118,34 +88,52 @@ function Res(gridblocksX, gridblocksY) {
             var WC = 0.0001 * 2 * Math.PI * this.cell[loc.x][loc.y].kx * this.cell[loc.x][loc.y].dz / Math.log(re / rw);
 
             var Area = Math.PI * re ^ 2;
-            var Volume = this.cell[loc.x][loc.y].dx * this.cell[loc.x][loc.y].dy * this.cell[loc.x][loc.y].dz;
             var kro = extrapolate(this.cell[loc.x][loc.y].Sw, swof[0], swof[2]);
             var krw = extrapolate(this.cell[loc.x][loc.y].Sw, swof[0], swof[1]);
             var lambda_o_well = 1 / this.Bw(loc.x, loc.y) * (kro / this.visc_o(loc.x, loc.y) + krw / this.visc_w(loc.x, loc.y));
             var lambda_w_well = 1 / this.Bo(loc.x, loc.y) * (kro / this.visc_o(loc.x, loc.y) + krw / this.visc_w(loc.x, loc.y));
 
-            this.cell[loc.x][loc.y].qo_ = WC * this.Bo(loc.x, loc.y) / Volume * lambda_o_well * (this.cell[loc.x][loc.y].p - wells[wellIndex].p_bh);
-            this.cell[loc.x][loc.y].qw_ = WC * this.Bw(loc.x, loc.y) / Volume * lambda_w_well * (this.cell[loc.x][loc.y].p - this.p_cow(loc.x, loc.y) - wells[wellIndex].p_bh);
+            this.cell[loc.x][loc.y].qo_ = WC / (Area * this.cell[loc.x][loc.y].dx) * lambda_o_well * (this.cell[loc.x][loc.y].p - wells[wellIndex].p_bh);
+            this.cell[loc.x][loc.y].qw_ = WC / (Area * this.cell[loc.x][loc.y].dx) * lambda_w_well * (this.cell[loc.x][loc.y].p - this.p_cow(loc.x, loc.y) - wells[wellIndex].p_bh);
 
-            //this.cell[loc.x][loc.y].qo_ = wells[wellIndex].qo_* this.Bo(loc.x, loc.y) / Volume;
-            //this.cell[loc.x][loc.y].qw_ = wells[wellIndex].qw_ * this.Bw(loc.x, loc.y) / Volume;
+            // this.cell[loc.x][loc.y].qo_ = 0.00001; //wells[wellIndex].qo_;
+            // this.cell[loc.x][loc.y].qw_ = 0.000001; //wells[wellIndex].qw_;
 
-            // this.cell[loc.x][loc.y].qo_ = 5.614583 * this.cell[loc.x][loc.y].qo_;
-            // this.cell[loc.x][loc.y].qo_ = 5.614583 * this.cell[loc.x][loc.y].qw_;
+            this.cell[loc.x][loc.y].qo_ = 5.614583*this.cell[loc.x][loc.y].qo_;
+            this.cell[loc.x][loc.y].qo_ = 5.614583*this.cell[loc.x][loc.y].qw_;
 
-            N_o += this.cell[loc.x][loc.y].qo_;
-            N_w += this.cell[loc.x][loc.y].qw_;
+            // this.cell[loc.x][loc.y].qo_;
+            // this.cell[loc.x][loc.y].qw_;
 
+            return { qo_: this.cell[loc.x][loc.y].qo_, qw_: this.cell[loc.x][loc.y].qw_ };
             //console.log('qo_', res.cell[loc].qo_);
             //console.log('qw_', res.cell[loc].qw_);
             //console.log('\n');
         }
-        console.log('N_o', N_o);
-        console.log('N_w', N_w);
-        return { qo_: N_o, qw_: N_w };
     }
-    this.calcTrans = function() {
-
+    this.calcTrans = function(){
+    	
+    }
+    this.getIndex = function(row, col){
+        var index = 0;
+        var long, short;
+        if(this.cell.length > this.cell[0].length){
+            long = this.cell.length;
+            short = this.cell[0].length;
+        }
+        else{
+            long = this.cell[0].length;
+            short = this.cell.length;
+        }
+        for(var i = 0; i < long; i++){
+            for(var j = 0; j < short; j++){
+                if(i == row && j == col){
+                    return index;
+                }
+                index++;
+            }
+        }
+        return undefined;
     }
 }
 

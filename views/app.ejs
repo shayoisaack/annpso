@@ -147,9 +147,11 @@
         float: left;
         width: 33.3%;
     }
-    .left{
-    	float: left;
+
+    .left {
+        float: left;
     }
+
     #chart-box {
         width: 100%;
         height: 300px;
@@ -166,12 +168,14 @@
         font-size: 0.9em;
         padding: 10px;
     }
-    .row{
-    	width: 100%;
-    	margin-bottom: 8px;
+
+    .row {
+        width: 100%;
+        margin-bottom: 8px;
     }
-    .row-item{
-    	padding: 0 10px 0 0;
+
+    .row-item {
+        padding: 0 10px 0 0;
     }
     </style>
     <!-- 
@@ -198,16 +202,16 @@
                 <canvas id='chart'></canvas>
             </div>
             <div id='other-info'>
-            	<div class='row'>Info</div>
-            	<div class='row'>
-            		<div class='left row-item'>OOIP: <span>208 MMSTB</span></div>
-            		<div class='left row-item'>Remaining: <span>123 MMSTB</span></div>
-            		<div class='left row-item'>Recovered: <span>85 MMSTB</span></div>
-            	</div>
-            	<div class='row'>
-            		<div class='left row-item'>Initial Pressure: <span>4500 psi</span></div>
-            		<div class='left row-item'>Recovery Factor: <span>0.41</span></div>
-            	</div>
+                <div class='row'>Info</div>
+                <div class='row'>
+                    <div class='left row-item'>OOIP: <span>4,675.32 MMSTB</span></div>
+                    <div class='left row-item'>Remaining: <span>- MMSTB</span></div>
+                    <div class='left row-item'>Recovered: <span>- MMSTB</span></div>
+                </div>
+                <div class='row'>
+                    <div class='left row-item'>Initial Pressure: <span>4500 psi</span></div>
+                    <div class='left row-item'>Recovery Factor: <span>-</span></div>
+                </div>
             </div>
         </div>
         <select id='choose-res'>
@@ -224,19 +228,19 @@
         </div>
         <div class='section'>
             <div class='section-header'>Simulate</div>
-            <div class='button'>Use Simulator</div>
+            <div class='button' id='simulate-simulator'>Use Simulator</div><span class='button-text' id='simulate-simulator-text'>32.035 s</span>
             <br/>
-            <div class='button'>Use ANN*</div>
+            <div class='button' id='simulate-ann'>Use ANN*</div><span class='button-text'>0.002 s</span>
             <br/>
-            <div class='button'>Use All</div>
+            <div class='button' id='simulate-all'>Use All</div>
         </div>
         <div class='section'>
             <div class='section-header'>Solve</div>
-            <div class='button'>Use Simulator</div>
+            <div class='button'>Use Simulator</div><span class='button-text'>-</span>
             <br/>
-            <div class='button'>Use ANN</div>
+            <div class='button'>Use ANN</div><span class='button-text'>5 s</span>
             <br/>
-            <div class='button'>Use ANN-PSO*</div>
+            <div class='button'>Use ANN-PSO*</div><span class='button-text'>0.45 s</span>
             <br/>
             <div class='button'>Use All</div>
         </div>
@@ -246,18 +250,20 @@
 <script type="text/javascript" src="./jquery.js"></script>
 <script src="/socket.io/socket.io.js"></script>
 <script>
+//declare glboal objects
 var socket = io();
-socket.on('chat message', function(msg) {
-    console.log(msg);
-});
+var resObj = {};
+var wellsObj = [];
 </script>
 <script>
-function drawGrid(res) {
+function drawGrid(res, wells) {
+    if (wells == undefined) wells = [];
+
     var gridblocksX = res.cell.length;
     var gridblocksY = res.cell[0].length;
     var gridSize = $('#main').width() / 2;
     $('#other').css('height', gridSize + 'px');
-    var $grid = $('<table style="border: 1px solid black; margin: 0; padding: 0; width: ' + gridSize + 'px; height: ' + gridSize * gridblocksX / gridblocksY + 'px"></table>');
+    var $grid = $('<table id="grid-table" style="border: 1px solid black; margin: 0; padding: 0; width: ' + gridSize + 'px; height: ' + gridSize * gridblocksX / gridblocksY + 'px"></table>');
     var cellSize = 1 / gridblocksY * 100;
     var counter = 0;
     for (var i = 0; i < gridblocksX; i++) {
@@ -265,11 +271,17 @@ function drawGrid(res) {
         for (var j = 0; j < gridblocksY; j++) {
             $td = $('<td></td>');
             $td.attr('id', counter);
-            $td.data('x', i);
-            $td.data('y', j);
+            $td.attr('data-x', i);
+            $td.attr('data-y', j);
             $td.css('width', cellSize + '%');
             $td.css('height', cellSize + '%');
-            $td.css('background', getColorForPercentage(1)); //res.cell[i][j].So));
+            for (var wi = 0; wi < wells.length; wi++) {
+                if (wells[wi].loc.x == i && wells[wi].loc.y == j) {
+                    $td.css('background', '#000');
+                } else {
+                    $td.css('background', getColorForPercentage(res.cell[i][j].So));
+                }
+            }
             $row.append($td);
         }
         counter++;
@@ -277,13 +289,20 @@ function drawGrid(res) {
     }
     $('#map').html($grid);
 }
-//drawGrid(50);
 
-$('td').on('click', function(e) {
-    $(this).css('background', getColorForPercentage($(this).data('x') / 50));
-    console.log($(this).data('x'), $(this).data('y'));
-    socket.emit('chat message', $(this).data('x'));
-})
+function drawWells(wells){
+	
+}
+function calcOIP(res) {
+    var OIP = 0;
+    for (var i = 0; i < res.cell.length; i++) {
+        for (var j = 0; j < res.cell[0].length; j++) {
+            OIP += res.cell[i][j].dx * res.cell[i][j].dy * res.cell[i][j].dz * res.cell[i][j].poro * (1 - res.cell[i][j].Sw);
+        }
+    }
+    return OIP / 5.614583;
+}
+//drawGrid(50);
 
 var percentColors = [
     { pct: 0.0, color: { r: 0xff, g: 0x00, b: 0 } },
@@ -315,12 +334,51 @@ var getColorForPercentage = function(pct) {
 <script>
 socket.on('reservoir', function(res) {
     console.log(res);
-    drawGrid(res);
-    setTimeout(function() {
-        socket.emit('simulate', res, [{ loc: { x: 1, y: 3 }, p_bh: 3350 }]);
-    }, 3000);
+    resObj = res;
+    wellsObj = [{ loc: { x: 1, y: 3 }, p_bh: 3350 }, { loc: { x: 25, y: 25 }, p_bh: 3350 }, { loc: { x: 30, y: 25 }, p_bh: 3350 }];
+    //res = modifyRes(res);
+    drawGrid(res, wellsObj);
+    console.log(calcOIP(res), 'bbl');
+    $('td').on('click', function(e) {
+        $(this).css('background', '#000');//getColorForPercentage($(this).data('x') / 50));
+        var x = $(this).data('x');
+        var y = $(this).data('y');
+        console.log(x, y);
+        // for (var count = 1; count < 10; count++) {
+        //     for (var i = 0; i < res.cell.length; i++) {
+        //         for (var j = 0; j < res.cell[0].length; j++) {
+        //             if ((i == x + count && j < x + 10 && j > x - 10) || (j == y + count && i < x + 10 && i > x - 10)) {
+        //                 var item = $('body').find('[data-x="' + i + '"][data-y="' + j + '"]');
+        //                 item.css('background', getColorForPercentage(count / 10));
+        //                 console.log(item);
+        //             }
+        //         }
+        //     }
+
+        // }
+        //socket.emit('chat message', $(this).data('x'));
+    })
 });
 
+function modifyRes(res) {
+    res.cell[1][3].So = 0.4;
+    res.cell[0][2].So = 0.5;
+    res.cell[0][3].So = 0.5;
+    res.cell[0][4].So = 0.55;
+    res.cell[1][2].So = 0.5;
+    res.cell[1][4].So = 0.5;
+    res.cell[2][2].So = 0.5;
+    res.cell[2][3].So = 0.5;
+    res.cell[2][4].So = 0.5;
+    res.cell[0][1].So = 0.55;
+    res.cell[1][1].So = 0.55;
+    res.cell[2][1].So = 0.55;
+    res.cell[3][2].So = 0.6;
+    res.cell[3][3].So = 0.55;
+    res.cell[3][4].So = 0.55;
+    res.cell[3][1].So = 0.6;
+    return res;
+}
 socket.on('simulation-result', function(N_o) {
     console.log('N_o', N_o);
 });
@@ -366,6 +424,24 @@ var myChart = new Chart(ctx, {
     }
 });
 </script>
+<script>
+var startDate;
+var endDate;
+//handlers for the controls in UI
+$('#simulate-simulator').on('click', function() {
+    startDate = new Date();
+    socket.emit('simulate-simulator', resObj, wellsObj);
+});
+
+//socket handlers for receiving from server
+socket.on('simulate-simulator-final', function(obj) {
+    endDate = new Date();
+    var time = (endDate.getTime() - startDate.getTime()) / 1000;
+    console.log('time taken: ', time, 's');
+    $('#simulate-simulator-text').html(time + 's');
+    drawGrid(obj.res);
+    console.log('obj ', obj);
+});
 </script>
 
 </html>
