@@ -19,40 +19,19 @@ var obj = JSON.parse(fs.readFileSync('network.json', 'utf8'));
 net.fromJSON((obj));
 
 var res1 = new Res(gridblocks, gridblocks);
-var wells1 = [{ loc: { x: 0, y: 0 }, p_bh: 3350 }];
+var wells1 = [{ loc: { x: 7, y: 8 }, p_bh: 3350 }];
 var nnVal, simVal;
-console.log('simulator ', simVal = simulate(res1, wells1, timesteps));
-console.log('neural network ', nnVal = net.run(linearize(res1, wells1, timesteps)));
-console.log('correlation ', 100 - Math.abs((simVal - nnVal)) / simVal * 100, '%');
-
-//linearize res properties from each cell for input to neural net
-function linearize(res, wells, time) {
-    var arr = [];
-    for (var i = 0; i < res.cell.length; i++) {
-        for (var j = 0; j < res.cell[0].length; j++) {
-            // arr[arr.length] = res.cell[i].p;
-            // arr[arr.length] = res.cell[i].poro;
-            // arr[arr.length] = res.cell[i].kx;
-            // arr[arr.length] = res.cell[i].ky;
-            // arr[arr.length] = res.cell[i].kz;
-            // arr[arr.length] = res.cell[i].qo_;
-            // arr[arr.length] = res.cell[i].qw_;
-            // arr[arr.length] = res.cell[i].dx;
-            // arr[arr.length] = res.cell[i].dy;
-            // arr[arr.length] = res.cell[i].dz;
-            // arr[arr.length] = res.cell[i].Sw;
-            // arr[arr.length] = res.cell[i].So;
-            var pp = res.cell[i][j].p * res.cell[i][j].poro * res.cell[i][j].So;
-            arr.push(pp);
-        }
-    }
-
-    for (var i = 0; i < wells.length; i++) {
-        arr[arr.length] = wells[i].loc.x;
-        arr[arr.length] = wells[i].loc.y;
-        arr[arr.length] = wells[i].p_bh;
-    }
-
-    arr[arr.length] = time;
-    return arr;
-}
+var simTime, annTime;
+var startDate,  endDate;
+startDate = new Date();
+simVal = simulate(res1, wells1, timesteps);
+endDate = new Date();
+simTime = (endDate.getTime()-startDate.getTime())/1000;
+console.log('simulator: ', simVal, 'in', simTime, 's');
+startDate = new Date();
+nnVal = net.run(res1.linearize(wells1, timesteps));
+endDate = new Date();
+annTime = (endDate.getTime()-startDate.getTime())/1000;
+console.log('neural network: ', nnVal[0], 'in', annTime, 's');
+console.log('correlation: ', 100 - Math.abs((simVal - nnVal)) / simVal * 100, '%');
+console.log('time improvement: ', simTime/annTime, 'times faster');

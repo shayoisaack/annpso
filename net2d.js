@@ -19,7 +19,7 @@ for (var i = 0; i < 10; i++) {
     var randNum;
     var wells = [{ loc: { x: randNumX = Math.floor(Math.random() * gridblocks), y: randNumY = Math.floor(Math.random() * gridblocks) }, p_bh: 3350 }];
     examples[i] = {};
-    examples[i].input = linearize(res, wells, timesteps);
+    examples[i].input = res.linearize(wells, timesteps);
     examples[i].output = [simulate(res, [{ loc: { x: randNumX, y: randNumY }, p_bh: 3350 }], timesteps)];
 }
 console.log('done examples');
@@ -45,37 +45,5 @@ var res1 = new Res(gridblocks, gridblocks);
 var wells1 = [{ loc: { x: 10, y: 5 }, p_bh: 3350 }];
 var nnVal, simVal;
 console.log('simulator ', simVal = simulate(res1, wells1, timesteps));
-console.log('neural network ', nnVal = net.run(linearize(res1, wells1, timesteps)));
+console.log('neural network ', nnVal = net.run(res1.linearize(wells1, timesteps)));
 console.log('correlation ', 100 - Math.abs((simVal - nnVal)) / simVal * 100, '%');
-
-//linearize res properties from each cell for input to neural net
-function linearize(res, wells, time) {
-    var arr = [];
-    for (var i = 0; i < res.cell.length; i++) {
-        for (var j = 0; j < res.cell[0].length; j++) {
-            // arr[arr.length] = res.cell[i].p;
-            // arr[arr.length] = res.cell[i].poro;
-            // arr[arr.length] = res.cell[i].kx;
-            // arr[arr.length] = res.cell[i].ky;
-            // arr[arr.length] = res.cell[i].kz;
-            // arr[arr.length] = res.cell[i].qo_;
-            // arr[arr.length] = res.cell[i].qw_;
-            // arr[arr.length] = res.cell[i].dx;
-            // arr[arr.length] = res.cell[i].dy;
-            // arr[arr.length] = res.cell[i].dz;
-            // arr[arr.length] = res.cell[i].Sw;
-            // arr[arr.length] = res.cell[i].So;
-            var pp = res.cell[i][j].p * res.cell[i][j].poro * res.cell[i][j].So;
-            arr.push(pp);
-        }
-    }
-
-    for (var i = 0; i < wells.length; i++) {
-        arr[arr.length] = wells[i].loc.x;
-        arr[arr.length] = wells[i].loc.y;
-        arr[arr.length] = wells[i].p_bh;
-    }
-
-    arr[arr.length] = time;
-    return arr;
-}

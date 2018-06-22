@@ -75,7 +75,7 @@ function Res(gridblocksX, gridblocksY) {
         var Bo1 = extrapolate(this.cell[i][j].p, pvt.o[0], pvt.o[1]);
         var Bo2 = extrapolate(this.cell[i][j].p + 0.01, pvt.o[0], pvt.o[1]);
 
-        return (1 / Bo2 - 1 / Bo1)/0.01; //dp = 0.01 psi
+        return (1 / Bo2 - 1 / Bo1) / 0.01; //dp = 0.01 psi
     }
 
     this.Bw = function(i, j) {
@@ -83,7 +83,7 @@ function Res(gridblocksX, gridblocksY) {
     }
 
     this.d1_Bw_dPw = function(i, j) {
-        return 1000*this.d1_Bo_dPo(i,j);//0;
+        return 1000 * this.d1_Bo_dPo(i, j); //0;
     }
 
     this.dPcow_dSw = function(i, j) {
@@ -146,6 +146,36 @@ function Res(gridblocksX, gridblocksY) {
     }
     this.calcTrans = function() {
 
+    }
+    this.linearize = function(wells, time) {//linearize reservoir properties from each cell for input to neural net
+        var arr = [];
+        for (var i = 0; i < this.cell.length; i++) {
+            for (var j = 0; j < this.cell[0].length; j++) {
+                // arr[arr.length] = this.cell[i].p;
+                // arr[arr.length] = this.cell[i].poro;
+                // arr[arr.length] = this.cell[i].kx;
+                // arr[arr.length] = this.cell[i].ky;
+                // arr[arr.length] = this.cell[i].kz;
+                // arr[arr.length] = this.cell[i].qo_;
+                // arr[arr.length] = this.cell[i].qw_;
+                // arr[arr.length] = this.cell[i].dx;
+                // arr[arr.length] = this.cell[i].dy;
+                // arr[arr.length] = this.cell[i].dz;
+                // arr[arr.length] = this.cell[i].Sw;
+                // arr[arr.length] = this.cell[i].So;
+                var pp = this.cell[i][j].p * this.cell[i][j].poro * this.cell[i][j].So;
+                arr.push(pp);
+            }
+        }
+
+        for (var i = 0; i < wells.length; i++) {
+            arr[arr.length] = wells[i].loc.x;
+            arr[arr.length] = wells[i].loc.y;
+            arr[arr.length] = wells[i].p_bh;
+        }
+
+        arr[arr.length] = time;
+        return arr;
     }
 }
 
