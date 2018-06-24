@@ -1,31 +1,23 @@
-var extrapolate = require('./utilities.js').extrapolate;
-var zeros = require('./utilities.js').zeros;
-var exists = require('./utilities.js').exists;
-// var Bo = require('./utilities.js').Bo;
-// var d1_Bo_dPo = require('./utilities.js').d1_Bo_dPo;
-// var Bw = require('./utilities.js').Bw;
-// var d1_Bw_dPw = require('./utilities.js').d1_Bw_dPw;
-// var dPcow_dSw = require('./utilities.js').dPcow_dSw;
-// var visc_o = require('./utilities.js').visc_o;
-// var visc_w = require('./utilities.js').visc_w;
-// var p_cow = require('./utilities.js').p_cow;
-var swof = require('./pvt.js').swof;
-var pvt = require('./pvt.js').pvt;
-var gauss = require('./gaussian-elimination-master/gauss.js');
+const extrapolate = require('./utilities.js').extrapolate;
+const zeros = require('./utilities.js').zeros;
+const exists = require('./utilities.js').exists;
+const swof = require('./pvt.js').swof;
+const pvt = require('./pvt.js').pvt;
+const gauss = require('./gaussian-elimination-master/gauss.js');
 
 //some constants
-var dt = 0.1; // timestep is 1 day
-var Rs = 0.4;
-var Pbp = 3337.0; //psi
-var Pref = 14.7;
-var cr = 3.0E-6;
-var rho = {};
+const dt = 0.1; // timestep is 1 day
+const Rs = 0.4;
+const Pbp = 3337.0; //psi
+const Pref = 14.7;
+const cr = 3.0E-6;
+const rho = {};
 rho.o = 49.1;
 rho.w = 64.79;
 rho.g = 0.06054;
-var Pi = 6000; //initial pressure (psi)
+const Pi = 6000; //initial pressure (psi)
 
-var simulate = function(res, wells, timesteps) {
+let simulate = function(res, wells, timesteps) {
     //set defaults
     if (timesteps == undefined) timesteps = Infinity;
     if (wells == undefined) wells = [];
@@ -66,7 +58,7 @@ var simulate = function(res, wells, timesteps) {
                 Cswo[i][j] = -res.cell[i][j].poro / (res.Bo(i, j) * dt);
                 Cpow[i][j] = (res.cell[i][j].poro * res.cell[i][j].Sw) / dt * (cr / res.Bw(i, j) + res.d1_Bw_dPw(i, j));
                 Csww[i][j] = res.cell[i][j].poro / (res.Bw(i, j) * dt) - res.dPcow_dSw(i, j) * Cpow[i][j];
-                console.log('Cpoo: ',Cpoo[i][j], 'Cpow', Cpow[i][j], 'Cswo', Cswo[i][j], 'Csww', Csww[i][j]);
+                //console.log('Cpoo: ',Cpoo[i][j], 'Cpow', Cpow[i][j], 'Cswo', Cswo[i][j], 'Csww', Csww[i][j]);
 
                 alpha = -Cswo[i][j] / Csww[i][j];
                 //console.log(alpha);
@@ -119,6 +111,7 @@ var simulate = function(res, wells, timesteps) {
                     Tyw_pos[i][j] = 2 * lambda_y_w_pos / res.cell[i][j].dy / (res.cell[i][j + 1].dy / res.cell[i][j + 1].ky + res.cell[i][j].dy / res.cell[i][j].ky);
                 }
 
+                //console.log(i, j);
                 Txo_neg[i][j] = Txo_neg[i][j] * 0.001127;
                 Txo_pos[i][j] = Txo_pos[i][j] * 0.001127;
                 Txw_neg[i][j] = Txw_neg[i][j] * 0.001127;
@@ -211,7 +204,7 @@ var simulate = function(res, wells, timesteps) {
         for (var wellIndex = 0; wellIndex < wells.length; wellIndex++) {
             if (Pnew[wells[wellIndex].loc.x][wells[wellIndex].loc.y] < wells[wellIndex].p_bh) {
                 //console.log('stop simulation: p < p_bh, timestep: ', timeIndex);
-                return returnModule();
+                //return returnModule();
             }
         }
 
@@ -269,15 +262,18 @@ var simulate = function(res, wells, timesteps) {
                     Cpoo[i][j] * (Pnew[i][j] - res.cell[i][j].p)
                 );
                 if (Swnew[i][j] < 0) {
-                    return returnModule();
+                    //return returnModule();
                 }
             }
         }
         //console.log('Snew', Swnew);
-
+        res.day += timesteps;
         //update pressures and saturations of reservoir
-        for (var i = 0; i < res.cell.length; i++) {
-            for (var j = 0; j < res.cell[0].length; j++) {
+        for (let i = 0; i < res.cell.length; i++) {
+            for (let j = 0; j < res.cell[0].length; j++) {
+                if(Pnew[i][j] < 0) Pnew[i][j] = 0;
+                if(Swnew[i][j] < 0) Swnew[i][j] = 0;
+                if(Swnew[i][j] > 1) Swnew[i][j] = 1;
                 res.cell[i][j].p = Pnew[i][j];
                 res.cell[i][j].Sw = Swnew[i][j];
                 res.cell[i][j].So = 1 - Swnew[i][j];
@@ -293,8 +289,8 @@ var simulate = function(res, wells, timesteps) {
     }
 
     function returnModule() {
-        console.log(Pnew);
-        console.log(Swnew);
+        //console.log(Pnew);
+        //console.log(Swnew);
         console.log('done simulating.');
         return N_o; // {
         //     N_o: N_o,

@@ -1,7 +1,7 @@
-var extrapolate = require('./utilities.js').extrapolate;
-var exists = require('./utilities.js').exists;
-var swof = require('./pvt.js').swof;
-var pvt = require('./pvt.js').pvt;
+const extrapolate = require('./utilities.js').extrapolate;
+const exists = require('./utilities.js').exists;
+const swof = require('./pvt.js').swof;
+const pvt = require('./pvt.js').pvt;
 
 function Cell(index, p, poro, perm, dx) {
     this.p = p;
@@ -17,22 +17,11 @@ function Cell(index, p, poro, perm, dx) {
     this.Sw = 0.3;
     this.So = 1 - this.Sw;
     this.index = index;
-    // this.Txo_neg = 0;
-    // this.Txo_pos = 0;
-    // this.Txw_neg = 0;
-    // this.Txw_pos = 0;
-    // this.Tyo_pos = 0;
-    // this.Tyo_neg = 0;
-    // this.Tyw_pos = 0;
-    // this.Tyw_neg = 0;
-    // this.Csww = 0;
-    // this.Cswo = 0;
-    // this.Cpoo = 0;
-    // this.Cpow = 0;
 }
 
 function Res(gridblocksX, gridblocksY) {
-    this.Pi = 8500; //psi
+    this.day = 0;
+    this.Pi = 4500; //psi
     this.rows = gridblocksX;
     this.cols = gridblocksY;
     this.gridblocks = gridblocksX * gridblocksY;
@@ -108,49 +97,56 @@ function Res(gridblocksX, gridblocksY) {
         }
     }
     this.addWells = function(wells) {
-        if (wells == undefined) wells = [];
-        var N_o = 0;
-        var N_w = 0;
-        for (var wellIndex = 0; wellIndex < wells.length; wellIndex++) {
-            var loc = wells[wellIndex].loc;
-            var re = Math.sqrt(this.cell[loc.x][loc.y].dy * this.cell[loc.x][loc.y].dx / Math.PI);
-            var rw = 0.25; //ft
-            var WC = 0.0001 * 2 * Math.PI * this.cell[loc.x][loc.y].kx * this.cell[loc.x][loc.y].dz / Math.log(re / rw);
+        if (wells === undefined) wells = [];
+        let N_o = 0;
+        let N_w = 0;
+        for (let wellIndex = 0; wellIndex < wells.length; wellIndex++) {
+            //console.log('wells', wells[wellIndex].loc.x);
+            //console.log(wells[wellIndex].condition);
+            let loc = wells[wellIndex].loc;
+            let Volume = this.cell[loc.x][loc.y].dx * this.cell[loc.x][loc.y].dy * this.cell[loc.x][loc.y].dz;
+            if (wells[wellIndex].condition === 'pressure' || wells[wellIndex].condition === undefined) {
+                if(wells[wellIndex].p_bh === undefined) wells[wellIndex].p_bh = 3350;
+                let re = Math.sqrt(this.cell[loc.x][loc.y].dy * this.cell[loc.x][loc.y].dx / Math.PI);
+                let rw = 0.25; //ft
+                let WC = 2 * Math.PI * this.cell[loc.x][loc.y].kx * this.cell[loc.x][loc.y].dz / Math.log(re / rw);
 
-            var Area = Math.PI * re ^ 2;
-            var Volume = this.cell[loc.x][loc.y].dx * this.cell[loc.x][loc.y].dy * this.cell[loc.x][loc.y].dz;
-            var kro = extrapolate(this.cell[loc.x][loc.y].Sw, swof[0], swof[2]);
-            var krw = extrapolate(this.cell[loc.x][loc.y].Sw, swof[0], swof[1]);
-            var lambda_o_well = 1 / this.Bw(loc.x, loc.y) * (kro / this.visc_o(loc.x, loc.y) + krw / this.visc_w(loc.x, loc.y));
-            var lambda_w_well = 1 / this.Bo(loc.x, loc.y) * (kro / this.visc_o(loc.x, loc.y) + krw / this.visc_w(loc.x, loc.y));
+                //let Area = Math.PI * re ^ 2;
+                let kro = extrapolate(this.cell[loc.x][loc.y].Sw, swof[0], swof[2]);
+                let krw = extrapolate(this.cell[loc.x][loc.y].Sw, swof[0], swof[1]);
+                let lambda_o_well = 1 / this.Bw(loc.x, loc.y) * (kro / this.visc_o(loc.x, loc.y) + krw / this.visc_w(loc.x, loc.y));
+                let lambda_w_well = 1 / this.Bo(loc.x, loc.y) * (kro / this.visc_o(loc.x, loc.y) + krw / this.visc_w(loc.x, loc.y));
 
-            this.cell[loc.x][loc.y].qo_ = WC * this.Bo(loc.x, loc.y) / Volume * lambda_o_well * (this.cell[loc.x][loc.y].p - wells[wellIndex].p_bh);
-            this.cell[loc.x][loc.y].qw_ = WC * this.Bw(loc.x, loc.y) / Volume * lambda_w_well * (this.cell[loc.x][loc.y].p - this.p_cow(loc.x, loc.y) - wells[wellIndex].p_bh);
+                this.cell[loc.x][loc.y].qo_ = WC * this.Bo(loc.x, loc.y) / Volume * lambda_o_well * (this.cell[loc.x][loc.y].p - wells[wellIndex].p_bh);
+                this.cell[loc.x][loc.y].qw_ = WC * this.Bw(loc.x, loc.y) / Volume * lambda_w_well * (this.cell[loc.x][loc.y].p - this.p_cow(loc.x, loc.y) - wells[wellIndex].p_bh);
 
-            //this.cell[loc.x][loc.y].qo_ = wells[wellIndex].qo_* this.Bo(loc.x, loc.y) / Volume;
-            //this.cell[loc.x][loc.y].qw_ = wells[wellIndex].qw_ * this.Bw(loc.x, loc.y) / Volume;
+            } else if (wells[wellIndex].condition === 'rate') {
 
-            // this.cell[loc.x][loc.y].qo_ = 5.614583 * this.cell[loc.x][loc.y].qo_;
-            // this.cell[loc.x][loc.y].qo_ = 5.614583 * this.cell[loc.x][loc.y].qw_;
+                this.cell[loc.x][loc.y].qo_ = wells[wellIndex].qo_ * this.Bo(loc.x, loc.y) / Volume;
+                this.cell[loc.x][loc.y].qw_ = wells[wellIndex].qw_ * this.Bw(loc.x, loc.y) / Volume;
+                //console.log('well data', this.cell[loc.x][loc.y].qo_);
+            }
 
-            N_o += this.cell[loc.x][loc.y].qo_;
-            N_w += this.cell[loc.x][loc.y].qw_;
+            this.cell[loc.x][loc.y].qo_ = 5.614583 * this.cell[loc.x][loc.y].qo_;
+            this.cell[loc.x][loc.y].qo_ = 5.614583 * this.cell[loc.x][loc.y].qw_;
 
-            //console.log('qo_', res.cell[loc].qo_);
-            //console.log('qw_', res.cell[loc].qw_);
-            //console.log('\n');
+            N_o += this.cell[loc.x][loc.y].qo_*Volume*this.Bo(loc.x, loc.y)/5.614583;
+            N_w += this.cell[loc.x][loc.y].qw_*Volume*this.Bw(loc.x, loc.y)/5.614583;
+
+            //console.log('qo_', this.cell[loc.x][loc.y].qo_);
+            //console.log('qw_', this.cell[loc.x][loc.y].qw_);
         }
-        console.log('N_o', N_o);
-        console.log('N_w', N_w);
+        //console.log('N_o', N_o);
+        //console.log('N_w', N_w);
         return { qo_: N_o, qw_: N_w };
     }
     this.calcTrans = function() {
 
     }
-    this.linearize = function(wells, time) {//linearize reservoir properties from each cell for input to neural net
-        var arr = [];
-        for (var i = 0; i < this.cell.length; i++) {
-            for (var j = 0; j < this.cell[0].length; j++) {
+    this.linearize = function(wells, time) { //linearize reservoir properties from each cell for input to neural net
+        let arr = [];
+        for (let i = 0; i < this.cell.length; i++) {
+            for (let j = 0; j < this.cell[0].length; j++) {
                 // arr[arr.length] = this.cell[i].p;
                 // arr[arr.length] = this.cell[i].poro;
                 // arr[arr.length] = this.cell[i].kx;
@@ -168,7 +164,8 @@ function Res(gridblocksX, gridblocksY) {
             }
         }
 
-        for (var i = 0; i < wells.length; i++) {
+        for (let i = 0; i < wells.length; i++) {
+            if(wells[i].p_bh === undefined) wells[i].p_bh = 3350;
             arr[arr.length] = wells[i].loc.x;
             arr[arr.length] = wells[i].loc.y;
             arr[arr.length] = wells[i].p_bh;

@@ -1,31 +1,31 @@
-var extrapolate = require('./utilities.js').extrapolate;
-var zeros = require('./utilities.js').zeros;
-var exists = require('./utilities.js').exists;
-// var Bo = require('./utilities.js').Bo;
-// var d1_Bo_dPo = require('./utilities.js').d1_Bo_dPo;
-// var Bw = require('./utilities.js').Bw;
-// var d1_Bw_dPw = require('./utilities.js').d1_Bw_dPw;
-// var dPcow_dSw = require('./utilities.js').dPcow_dSw;
-// var visc_o = require('./utilities.js').visc_o;
-// var visc_w = require('./utilities.js').visc_w;
-// var p_cow = require('./utilities.js').p_cow;
-var swof = require('./pvt.js').swof;
-var pvt = require('./pvt.js').pvt;
-var gauss = require('./gaussian-elimination-master/gauss.js');
+const extrapolate = require('./utilities.js').extrapolate;
+const zeros = require('./utilities.js').zeros;
+const exists = require('./utilities.js').exists;
+// const Bo = require('./utilities.js').Bo;
+// const d1_Bo_dPo = require('./utilities.js').d1_Bo_dPo;
+// const Bw = require('./utilities.js').Bw;
+// const d1_Bw_dPw = require('./utilities.js').d1_Bw_dPw;
+// const dPcow_dSw = require('./utilities.js').dPcow_dSw;
+// const visc_o = require('./utilities.js').visc_o;
+// const visc_w = require('./utilities.js').visc_w;
+// const p_cow = require('./utilities.js').p_cow;
+const swof = require('./pvt.js').swof;
+const pvt = require('./pvt.js').pvt;
+const gauss = require('./gaussian-elimination-master/gauss.js');
 
 //some constants
-var dt = 0.1; // timestep is 1 day
-var Rs = 0.4;
-var Pbp = 3337.0; //psi
-var Pref = 14.7;
-var cr = 3.0E-6;
-var rho = {};
+const dt = 1; // timestep is 1 day
+const Rs = 0.4;
+const Pbp = 3337.0; //psi
+const Pref = 14.7;
+const cr = 3.0E-6;
+const rho = {};
 rho.o = 49.1;
 rho.w = 64.79;
 rho.g = 0.06054;
-var Pi = 6000; //initial pressure (psi)
+const Pi = 6000; //initial pressure (psi)
 
-var simulate = function(res, wells, timesteps) {
+let simulate = function(res, wells, timesteps) {
     //set defaults
     if (timesteps == undefined) timesteps = Infinity;
     if (wells == undefined) wells = [];
@@ -275,10 +275,13 @@ var simulate = function(res, wells, timesteps) {
             }
         }
         //console.log('Snew', Swnew);
-
+        res.day += timesteps;
         //update pressures and saturations of reservoir
-        for (var i = 0; i < res.cell.length; i++) {
-            for (var j = 0; j < res.cell[0].length; j++) {
+        for (let i = 0; i < res.cell.length; i++) {
+            for (let j = 0; j < res.cell[0].length; j++) {
+                if(Pnew[i][j] < 0) Pnew[i][j] = 0;
+                if(Swnew[i][j] < 0) Swnew[i][j] = 0;
+                if(Swnew[i][j] > 1) Swnew[i][j] = 1;
                 res.cell[i][j].p = Pnew[i][j];
                 res.cell[i][j].Sw = Swnew[i][j];
                 res.cell[i][j].So = 1 - Swnew[i][j];

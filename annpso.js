@@ -1,77 +1,66 @@
-var brain = require('brain.js');
-var pso = require('./pso.js/src/pso.js');
-
-var net = new brain.NeuralNetwork({
+const brain = require('brain.js');
+const PSO = require('./pso.js').PSO;
+const fs = require('fs');
+const net = new brain.NeuralNetwork({
     activation: 'leaky-relu', // activation function
     hiddenLayers: [10, 10],
     learningRate: 0.6 // global learning rate, useful when training using streams
 });
-var Res = require('./res.js').Res;
-var simulate = require('./simulator.js').simulate;
+const Res = require('./res2d.js').Res;
+const Well = require('./well.js').Well;
+const simulate = require('./simulator2dtrain.js').simulate;
 
-var examples = [];
+const timesteps = 1;
+const gridblocks = 15;
+//let res = new Res(gridblocks, gridblocks);
 
-var timesteps = 1;
-var gridblocks = 100;
-var res = new Res(gridblocks);
-//generate examples for use in neural network
-for (var i = 0; i < 70; i++) {
-    var res = new Res(gridblocks);
-    var randNum;
-    var wells = [{ loc: randNum = Math.floor(Math.random() * gridblocks), p_bh: 3350 }];
-    examples[i] = {};
-    examples[i].input = linearize(res, timesteps, wells);
-    examples[i].output = [simulate(res, timesteps, [{ loc: randNum, p_bh: 3350 }])];
+let netJSON = fs.readFileSync('network15x15_97.json', 'utf8');
+net.fromJSON(JSON.parse(netJSON));
+
+console.log('net', net.run(new Res(gridblocks, gridblocks).linearize([{loc: {x: 2, y: 3}}])));
+
+let pso = new PSO();
+const numParticles = 10;
+const numIterations = 20;
+
+//pso.setObjective(simulate, res, timesteps);
+
+pso.init(numParticles, gridblocks, gridblocks);
+for(let i = 0; i < 40; i++){
+    pso.step(new Res(gridblocks, gridblocks), timesteps, function(res, wells, timesteps){
+        return net.run(res.linearize(wells, timesteps));
+    });
 }
 
-//console.log(examples);
-//train and test neural network on examples
-net.train(examples, {
-    errorThresh: 0.005, // error threshold to reach
-    iterations: 20000, // maximum training iterations
-    log: false, // number of iterations between logging
-    learningRate: 0.3 // learning rate
-});
+console.log('pBest', pso.gBest);
+console.log('gBestVal', pso.gBestVal);
+// pso.printParticles();
+// pso.step(new Res(gridblocks, gridblocks), timesteps, simulate);
+// pso.printParticles();
+// console.log('gBest', pso.gBest);
+// console.log('gBestVal', pso.gBestVal);
+// console.log('\n');
+// pso.printParticles();
+// pso.step(new Res(gridblocks, gridblocks), timesteps, simulate);
+// pso.printParticles();
+// console.log('gBest', pso.gBest);
+// console.log('gBestVal', pso.gBestVal);
 
-//search for best location using pso
-var optimizer = new pso.Optimizer();
-optimizer.setObjectiveFunction(function(x) {
-    var res2 = new Res(gridblocks);
-    return net.run(linearize(res2, timesteps, [{ loc: x[0], p_bh: 3350 }]));
-});
+//pso.printParticles();
+//pso.step(numIterations);
 
-optimizer.init(20, [{ start: 1, end: 100 }]);
+//console.log('annpso: ', pso.bestFitness, pso.bestPosition);
 
-for (var i = 0; i < 40; i++) {
-    optimizer.step();
-}
-console.log('pso: ', optimizer.getBestFitness(), optimizer.getBestPosition());
-
-//linearize res properties from each cell for input to neural net
-function linearize(res, time, wells) {
-    var arr = [];
-    for (var i = 0; i < res.cell.length; i++) {
-        // arr[arr.length] = res.cell[i].p;
-        // arr[arr.length] = res.cell[i].poro;
-        // arr[arr.length] = res.cell[i].kx;
-        // arr[arr.length] = res.cell[i].ky;
-        // arr[arr.length] = res.cell[i].kz;
-        // arr[arr.length] = res.cell[i].qo_;
-        // arr[arr.length] = res.cell[i].qw_;
-        // arr[arr.length] = res.cell[i].dx;
-        // arr[arr.length] = res.cell[i].dy;
-        // arr[arr.length] = res.cell[i].dz;
-        // arr[arr.length] = res.cell[i].Sw;
-        // arr[arr.length] = res.cell[i].So;
-        var pp = res.cell[i].p * res.cell[i].poro * res.cell[i].So;
-        arr[i] = pp;
-    }
-
-    for (var i = 0; i < wells.length; i++) {
-        arr[arr.length] = wells[i].loc;
-        arr[arr.length] = wells[i].p_bh;
-    }
-
-    arr[arr.length] = time;
-    return arr;
-}
+// //search for best location using pso
+// let optimizer = new pso.Optimizer();
+// optimizer.setObjectiveFunction(function(x) {
+//     let res2 = new Res(gridblocks);
+//     return net.run(linearize(res2, timesteps, [{ loc: x[0], p_bh: 3350 }]));
+// });
+//
+// optimizer.init(20, [{ start: 1, end: 100 }]);
+//
+// for (let i = 0; i < 40; i++) {
+//     optimizer.step();
+// }
+// console.log('pso: ', optimizer.getBestFitness(), optimizer.getBestPosition());

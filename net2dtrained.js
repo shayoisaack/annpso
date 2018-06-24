@@ -1,28 +1,28 @@
-var brain = require('brain.js');
-var fs = require('fs');
-var net = new brain.NeuralNetwork({
+const brain = require('brain.js');
+const fs = require('fs');
+const net = new brain.NeuralNetwork({
     activation: 'leaky-relu', // activation function
     hiddenLayers: [10, 10],
     learningRate: 0.6 // global learning rate, useful when training using streams
 });
-var Res = require('./res2d.js').Res;
-var simulate = require('./simulator2dtrain.js').simulate;
+let Res = require('./res2d.js').Res;
+let simulate = require('./simulator2dtrain.js').simulate;
 
-var examples = [];
+let examples = [];
 
-var timesteps = 10;
-var gridblocks = 15;
-var res = new Res(gridblocks, gridblocks);
+let timesteps = 10;
+let gridblocks = 15;
+let res = new Res(gridblocks, gridblocks);
 
 //load trained network
-var obj = JSON.parse(fs.readFileSync('network.json', 'utf8'));
+let obj = JSON.parse(fs.readFileSync('network.json', 'utf8'));
 net.fromJSON((obj));
 
-var res1 = new Res(gridblocks, gridblocks);
-var wells1 = [{ loc: { x: 7, y: 8 }, p_bh: 3350 }];
-var nnVal, simVal;
-var simTime, annTime;
-var startDate,  endDate;
+let res1 = new Res(gridblocks, gridblocks);
+let wells1 = [{ condition: 'pressure', loc: { x: 7, y: 8 }, p_bh: 3350, qo_: 200000, qw_: 20000 }];
+let nnVal, simVal;
+let simTime, annTime;
+let startDate,  endDate;
 startDate = new Date();
 simVal = simulate(res1, wells1, timesteps);
 endDate = new Date();

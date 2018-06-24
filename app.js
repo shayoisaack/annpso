@@ -1,9 +1,9 @@
-var express = require('express');
-var app = express();
-var http = require('http').Server(app);
-var io = require('socket.io')(http);
-var Promise = require('promise');
-var clone = require('clone');
+const express = require('express');
+const app = express();
+const http = require('http').Server(app);
+const io = require('socket.io')(http);
+const Promise = require('promise');
+const clone = require('clone');
 
 
 io.set('heartbeat timeout', 60000); 
@@ -18,16 +18,18 @@ app.get('/', function(req, res) {
 });
 
 //initiate reservoir and pass to client
-var simulate = require('./simulator2d-server.js').simulate;
-var Res = require('./res2d.js').Res;
+let simulate = require('./simulator2d-server.js').simulate;
+let Res = require('./res2d.js').Res;
+const Well = require('./well.js').Well;
 
-var res = new Res(50, 50);
+let res = new Res(30, 30);
+let wells = [new Well(7, 8), new Well(2, 3)];
 
 io.on('connection', function(socket) {
     console.log('connected');
 
     //when user is connected pass him the reservoir 
-    socket.emit('reservoir', res);
+    socket.emit('reservoir', res, wells);
 
     //receive command to simulate
     socket.on('simulate', function(res, wells) {
@@ -36,7 +38,7 @@ io.on('connection', function(socket) {
 
     socket.on('simulate-simulator', function(resObj, wellsObj) {
         console.log('res ', resObj);
-        // var promise = new Promise(function(resolve, reject) {
+        // let promise = new Promise(function(resolve, reject) {
         //     try {
         //         res = simulate(res, wellsObj, 1);
         //     } catch (err) {
@@ -48,9 +50,8 @@ io.on('connection', function(socket) {
         // 	console.log('resolving promise');
         //     io.emit('simulate-simulator-final', res);
         // });
-        res = simulate(res, [{loc: {x: 2, y: 2}, p_bh: 3350}], 10);
-        io.emit('simulate-simulator-final', clone(res));
-        console.log('after promise..');
+        res = simulate(res, wellsObj, 5);//[{condition: 'pressure', loc: {x: 7, y: 8}, p_bh: 3350}], 10);
+        io.emit('simulate-simulator-final', clone(res), clone(wellsObj));
     });
     //when disconnected
     socket.on('disconnect', function() {

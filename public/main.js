@@ -22,12 +22,12 @@ function drawGrid(res, wells) {
             $td.attr('data-y', j);
             $td.css('width', cellSize + '%');
             $td.css('height', cellSize + '%');
+            //$td.css('background', getColorForPercentage(res.cell[i][j].p/4500));
             $td.css('background', getColorForPercentage(res.cell[i][j].So));
             for (var wi = 0; wi < wells.length; wi++) {
                 if (wells[wi].loc.x == i && wells[wi].loc.y == j) {
-                    $td.css('background', '#000');
-                } else {
-                    $td.css('background', getColorForPercentage(res.cell[i][j].So));
+                    console.log('well here', i, j);
+                    $td.css('background', 'rgba(0,0,0)');
                 }
             }
             $row.append($td);
@@ -82,12 +82,14 @@ var getColorForPercentage = function(pct) {
 
 //socket code handlers
 
-socket.on('reservoir', function(res) {
-    console.log(res);
+socket.on('reservoir', function(res, wells) {
+    console.log('res', res);
+    console.log('wells', wells)
     resObj = res;
-    wellsObj = [{ loc: { x: 1, y: 3 }, p_bh: 3350 }, { loc: { x: 25, y: 25 }, p_bh: 3350 }, { loc: { x: 30, y: 25 }, p_bh: 3350 }];
+    wellsObj = wells;
+    //wellsObj = [{ loc: { x: 1, y: 3 }, p_bh: 3350 }, { loc: { x: 25, y: 25 }, p_bh: 3350 }, { loc: { x: 30, y: 25 }, p_bh: 3350 }];
     //res = modifyRes(res);
-    drawGrid(res, wellsObj);
+    drawGrid(resObj, wellsObj);
     console.log(calcOIP(res), 'bbl');
     $('td').on('click', function(e) {
         $(this).css('background', '#000'); //getColorForPercentage($(this).data('x') / 50));
@@ -176,18 +178,21 @@ var endDate;
 
 //handlers for the controls in UI
 $('#simulate-simulator').on('click', function() {
+    $(this).removeAttr('onclick');
     startDate = new Date();
     console.log(startDate);
     socket.emit('simulate-simulator', resObj, wellsObj);
 });
 
 //socket handlers for receiving from server
-socket.on('simulate-simulator-final', function(obj) {
+socket.on('simulate-simulator-final', function(obj, wells) {
     console.log('res', obj);
     endDate = new Date();
-    var time = (endDate.getTime() - startDate.getTime()) / 1000;
+    let time = (endDate.getTime() - startDate.getTime()) / 1000;
     console.log('time taken: ', time, 's');
     $('#simulate-simulator-text').html(time + 's');
-    drawGrid(obj);
+    drawGrid(obj, wells);
+    $('#day').html(obj.day);
     console.log('obj ', obj);
+    socket.emit('simulate-simulator', obj, wells);
 });
