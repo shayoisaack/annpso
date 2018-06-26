@@ -30,13 +30,13 @@
                 <div class='row'>Info</div>
                 <div class='row'>
                     <div class='left row-item'>Day: <span id="day">0</span></div>
-                    <div class='left row-item'>OOIP: <span>4,675.32 MMSTB</span></div>
-                    <div class='left row-item'>Remaining: <span>- MMSTB</span></div>
-                    <div class='left row-item'>Recovered: <span>- MMSTB</span></div>
+                    <div class='left row-item'>OOIP: <span id="ooip"></span> MMSTB</div>
+                    <div class='left row-item'>Recovered: <span id="recovered"></span> MMSTB</div>
+                    <div class='left row-item'>Remaining: <span id="remaining"></span> MMSTB</div>
                 </div>
                 <div class='row'>
                     <div class='left row-item'>Initial Pressure: <span>4500 psi</span></div>
-                    <div class='left row-item'>Recovery Factor: <span>-</span></div>
+                    <div class='left row-item'>Recovery Factor: <span id="rf"></span></div>
                 </div>
             </div>
         </div>
@@ -54,9 +54,9 @@
         </div>
         <div class='section'>
             <div class='section-header'>Simulate</div>
-            <div class='button' id='simulate-simulator'>Use Simulator</div><span class='button-text' id='simulate-simulator-text'>32.035 s</span>
+            <div class='button' id='simulate-simulator'>Use Simulator</div><span class='button-text' id='simulate-simulator-text'></span>
             <br/>
-            <div class='button' id='simulate-ann'>Use ANN*</div><span class='button-text'>0.002 s</span>
+            <div class='button' id='simulate-ann'>Use ANN*</div><span class='button-text' id="simulate-ann-text"></span>
             <br/>
             <div class='button' id='simulate-all'>Use All</div>
         </div>
@@ -64,9 +64,9 @@
             <div class='section-header'>Solve</div>
             <div class='button'>Use Simulator</div><span class='button-text'>-</span>
             <br/>
-            <div class='button'>Use ANN</div><span class='button-text'>5 s</span>
+            <div class='button'>Use ANN</div><span class='button-text'></span>
             <br/>
-            <div class='button'>Use ANN-PSO*</div><span class='button-text'>0.45 s</span>
+            <div class='button'>Use ANN-PSO*</div><span class='button-text'></span>
             <br/>
             <div class='button'>Use All</div>
         </div>

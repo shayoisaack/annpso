@@ -11,19 +11,20 @@ let PSO = function (){
     this.particles = [];
     this.gBest = - Infinity;
     this.gBestVal = null;
+    this.numParticles = 0;
     this.setObjective = function(objectiveFunction, res, timesteps){
         this.objectiveFunction = objectiveFunction;
         this.res = res;
         this.timesteps = timesteps;
     };
-    this.init = function(numIterations, maxX, maxY){
-        for(let i = 0; i < numIterations; i++){
+    this.init = function(numParticles, maxX, maxY){
+        for(let i = 0; i < numParticles; i++){
             let randX = Math.floor(Math.random()*maxX);
             let randY = Math.floor(Math.random()*maxY);
             this.particles.push(new Particle(randX, randY));
         }
+        this.numParticles = numParticles;
         return this.particles;
-
     };
     // this.findFitness = function(particle){
     //     return this.objectiveFunction(this.res, [{loc: {x: particle.x, y: particle.y}}], this.timesteps);
@@ -81,6 +82,12 @@ let PSO = function (){
             this.particles.forEach(function(particle){
                 console.log('print', particle);
             });
+    };
+    this.reset = function(){
+        this.particles = [];
+        this.gBest = - Infinity;
+        this.gBestVal = null;
+
     };
 };
 

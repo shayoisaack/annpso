@@ -22,14 +22,25 @@ let simulate = require('./simulator2d-server.js').simulate;
 let Res = require('./res2d.js').Res;
 const Well = require('./well.js').Well;
 
-let res = new Res(30, 30);
-let wells = [new Well(7, 8), new Well(2, 3)];
+const gridblocks = 15;
+let res = new Res(gridblocks, gridblocks);
+let wells = [new Well(10, 8)];
+let timesteps = 10;
+
+//load neural network
+const brain = require('brain.js');
+const fs = require('fs');
+const net = new brain.NeuralNetwork({
+    activation: 'leaky-relu', // activation function
+    hiddenLayers: [10, 10],
+    learningRate: 0.6 // global learning rate, useful when training using streams
+});
 
 io.on('connection', function(socket) {
     console.log('connected');
 
     //when user is connected pass him the reservoir 
-    socket.emit('reservoir', res, wells);
+    socket.emit('reservoir', clone(res), clone(wells));
 
     //receive command to simulate
     socket.on('simulate', function(res, wells) {
@@ -50,8 +61,22 @@ io.on('connection', function(socket) {
         // 	console.log('resolving promise');
         //     io.emit('simulate-simulator-final', res);
         // });
-        res = simulate(res, wellsObj, 5);//[{condition: 'pressure', loc: {x: 7, y: 8}, p_bh: 3350}], 10);
+        // let newRes = new Res(gridblocks, gridblocks);
+        // let newWells = [new Well(10, 8)];
+        res = simulate(res, wells, timesteps);//[{condition: 'pressure', loc: {x: 7, y: 8}, p_bh: 3350}], 10);
         io.emit('simulate-simulator-final', clone(res), clone(wellsObj));
+    });
+
+    socket.on('simulate-ann', function(resObj, wellsObj){
+        console.log('ann sim');
+        let netJSON = fs.readFileSync('network20x20_97.json', 'utf8');
+        net.fromJSON(JSON.parse(netJSON));
+
+        console.log('simulating using ann');
+        let newRes = new Res(gridblocks, gridblocks);
+        let newWells = [new Well(10, 8)];
+        let N_o = net.run(newRes.linearize(newWells, timesteps));
+        io.emit('simulate-ann-final', N_o, clone(newRes), clone(newWells));
     });
     //when disconnected
     socket.on('disconnect', function() {

@@ -25,6 +25,7 @@ function Res(gridblocksX, gridblocksY) {
     this.rows = gridblocksX;
     this.cols = gridblocksY;
     this.gridblocks = gridblocksX * gridblocksY;
+    this.N_o = 0;
     this.getIndex = function(row, col) {
         var index = 0;
         var long, short;
@@ -85,6 +86,14 @@ function Res(gridblocksX, gridblocksY) {
         return extrapolate(this.cell[i][j].p, pvt.o[0], pvt.o[1]);
     }
 
+    this.kro = function(i, j){
+        return extrapolate(this.cell[i][j].Sw, swof[0], swof[2]);
+    }
+
+    this.krw = function(i, j){
+        return extrapolate(this.cell[i][j].Sw, swof[0], swof[1]);
+    }
+
     this.visc_w = function(i, j) {
         return pvt.w[3];
     }
@@ -132,6 +141,8 @@ function Res(gridblocksX, gridblocksY) {
 
             N_o += this.cell[loc.x][loc.y].qo_*Volume*this.Bo(loc.x, loc.y)/5.614583;
             N_w += this.cell[loc.x][loc.y].qw_*Volume*this.Bw(loc.x, loc.y)/5.614583;
+            //N_o += this.cell[loc.x][loc.y].qo_;
+            //N_w += this.cell[loc.x][loc.y].qw_;
 
             //console.log('qo_', this.cell[loc.x][loc.y].qo_);
             //console.log('qw_', this.cell[loc.x][loc.y].qw_);
@@ -159,7 +170,7 @@ function Res(gridblocksX, gridblocksY) {
                 // arr[arr.length] = this.cell[i].dz;
                 // arr[arr.length] = this.cell[i].Sw;
                 // arr[arr.length] = this.cell[i].So;
-                var pp = this.cell[i][j].p * this.cell[i][j].poro * this.cell[i][j].So;
+                let pp = this.cell[i][j].p * this.cell[i][j].poro * this.cell[i][j].So;
                 arr.push(pp);
             }
         }
@@ -173,7 +184,17 @@ function Res(gridblocksX, gridblocksY) {
 
         arr[arr.length] = time;
         return arr;
-    }
+    };
+    this.calcOIP = function() {
+        let OIP = 0;
+        for (let i = 0; i < this.cell.length; i++) {
+            for (let j = 0; j < this.cell[0].length; j++) {
+                OIP += this.cell[i][j].dx * this.cell[i][j].dy * this.cell[i][j].dz * this.cell[i][j].poro * (1 - this.cell[i][j].Sw);
+            }
+        }
+        return Math.trunc(OIP / 5.614583/1000000*100)/100;
+    };
+    this.OOIP = this.calcOIP();
 }
 
 //exports.res = res;

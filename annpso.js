@@ -1,5 +1,5 @@
 const brain = require('brain.js');
-const PSO = require('./pso.js').PSO;
+const PSO = require('./psomultiple.js').PSO;
 const fs = require('fs');
 const net = new brain.NeuralNetwork({
     activation: 'leaky-relu', // activation function
@@ -10,30 +10,47 @@ const Res = require('./res2d.js').Res;
 const Well = require('./well.js').Well;
 const simulate = require('./simulator2dtrain.js').simulate;
 
-const timesteps = 1;
+const timesteps = 10;
 const gridblocks = 15;
 //let res = new Res(gridblocks, gridblocks);
 
-let netJSON = fs.readFileSync('network15x15_97.json', 'utf8');
+let netJSON = fs.readFileSync('network.json', 'utf8');
 net.fromJSON(JSON.parse(netJSON));
 
-console.log('net', net.run(new Res(gridblocks, gridblocks).linearize([{loc: {x: 2, y: 3}}])));
+//console.log('net', net.run(new Res(gridblocks, gridblocks).linearize([{loc: {x: 2, y: 3}}])));
 
 let pso = new PSO();
 const numParticles = 10;
 const numIterations = 20;
+const numWells = 3;
 
 //pso.setObjective(simulate, res, timesteps);
-
-pso.init(numParticles, gridblocks, gridblocks);
-for(let i = 0; i < 40; i++){
+//
+pso.init(numParticles, gridblocks, gridblocks, numWells);
+for(let i = 0; i < numIterations; i++){
     pso.step(new Res(gridblocks, gridblocks), timesteps, function(res, wells, timesteps){
-        return net.run(res.linearize(wells, timesteps));
+        let val = net.run(res.linearize(wells, timesteps));
+        return val[0]*1e10;
     });
 }
 
-console.log('pBest', pso.gBest);
+console.log('ann');
+console.log('gBest', pso.gBest);
 console.log('gBestVal', pso.gBestVal);
+console.log('\n');
+
+pso.reset();
+pso.init(numParticles, gridblocks, gridblocks, numWells);
+
+for(let i = 0; i < numIterations; i++){
+    pso.step(new Res(gridblocks, gridblocks), timesteps, simulate);
+}
+
+console.log('simulator');
+console.log('gBest', pso.gBest);
+console.log('gBestVal', pso.gBestVal);
+console.log('\n');
+
 // pso.printParticles();
 // pso.step(new Res(gridblocks, gridblocks), timesteps, simulate);
 // pso.printParticles();

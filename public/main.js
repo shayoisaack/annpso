@@ -24,6 +24,7 @@ function drawGrid(res, wells) {
             $td.css('height', cellSize + '%');
             //$td.css('background', getColorForPercentage(res.cell[i][j].p/4500));
             $td.css('background', getColorForPercentage(res.cell[i][j].So));
+            //$td.css('background', getColorForPercentage(res.cell[i][j].kx*res.cell[i][j].So*res.cell[i][j].poro/100));
             for (var wi = 0; wi < wells.length; wi++) {
                 if (wells[wi].loc.x == i && wells[wi].loc.y == j) {
                     console.log('well here', i, j);
@@ -90,7 +91,8 @@ socket.on('reservoir', function(res, wells) {
     //wellsObj = [{ loc: { x: 1, y: 3 }, p_bh: 3350 }, { loc: { x: 25, y: 25 }, p_bh: 3350 }, { loc: { x: 30, y: 25 }, p_bh: 3350 }];
     //res = modifyRes(res);
     drawGrid(resObj, wellsObj);
-    console.log(calcOIP(res), 'bbl');
+    console.log(res.OOIP, 'bbl');
+    $('#ooip').html(res.OOIP);
     $('td').on('click', function(e) {
         $(this).css('background', '#000'); //getColorForPercentage($(this).data('x') / 50));
         var x = $(this).data('x');
@@ -173,26 +175,57 @@ var myChart = new Chart(ctx, {
     }
 });
 
-var startDate;
-var endDate;
+let startDate;
+let endDate;
+let startDateANN;
+let endDateANN;
 
 //handlers for the controls in UI
 $('#simulate-simulator').on('click', function() {
-    $(this).removeAttr('onclick');
+    // console.log('clicked btn');
+    // $(this).removeAttr('onclick');
     startDate = new Date();
     console.log(startDate);
     socket.emit('simulate-simulator', resObj, wellsObj);
 });
 
-//socket handlers for receiving from server
 socket.on('simulate-simulator-final', function(obj, wells) {
+    if(obj.day > 1000) return;
     console.log('res', obj);
     endDate = new Date();
     let time = (endDate.getTime() - startDate.getTime()) / 1000;
     console.log('time taken: ', time, 's');
-    $('#simulate-simulator-text').html(time + 's');
+    $('#simulate-simulator-text').html((Math.trunc(obj.N_o*100/1e6)/100)+'mmSTB'+' in '+time + 's');
     drawGrid(obj, wells);
+    let recovered = 0;
     $('#day').html(obj.day);
+    $('#recovered').html(recovered = Math.trunc(obj.N_o/1000000*100)/100);
+    $('#remaining').html(Math.trunc((obj.OOIP - recovered)*100)/100);
+    $('#rf').html(Math.trunc(recovered/ obj.OOIP*100)/100)
     console.log('obj ', obj);
     socket.emit('simulate-simulator', obj, wells);
+});
+
+$('#simulate-ann').on('click', function(){
+    startDateANN = new Date();
+    console.log(startDateANN);
+    socket.emit('simulate-ann', resObj, wellsObj);
+    console.log('emitted socket')
+});
+
+socket.on('simulate-ann-final', function(N_o, res, wells) {
+    if(res.day > 1000) return;
+    console.log('N_o', N_o);
+    endDateANN = new Date();
+    let time = (endDateANN.getTime() - startDateANN.getTime()) / 1000;
+    console.log('time taken: ', time, 's');
+    $('#simulate-ann-text').html((Math.trunc(N_o*1e11*100/1e6)/100)+'mmSTB'+' in '+time + 's');
+    drawGrid(res, wells);
+    let recovered;
+    //$('#day').html(res.day);
+    $('#recovered').html(recovered = Math.trunc(N_o/1000000*100)/100);
+    $('#remaining').html(Math.trunc((res.OOIP - recovered)*100)/100);
+    $('#rf').html(Math.trunc(recovered/ res.OOIP*100)/100);
+    console.log('res ', res);
+    //socket.emit('simulate-simulator', obj, wells);
 });

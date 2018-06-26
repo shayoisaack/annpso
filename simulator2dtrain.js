@@ -291,7 +291,7 @@ let simulate = function(res, wells, timesteps) {
     function returnModule() {
         //console.log(Pnew);
         //console.log(Swnew);
-        console.log('done simulating.');
+        //console.log('done simulating.');
         return N_o; // {
         //     N_o: N_o,
         //     N_w: N_w,

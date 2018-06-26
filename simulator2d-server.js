@@ -14,7 +14,7 @@ const pvt = require('./pvt.js').pvt;
 const gauss = require('./gaussian-elimination-master/gauss.js');
 
 //some constants
-const dt = 1; // timestep is 1 day
+const dt = 0.1; // timestep is 1 day
 const Rs = 0.4;
 const Pbp = 3337.0; //psi
 const Pref = 14.7;
@@ -297,6 +297,7 @@ let simulate = function(res, wells, timesteps) {
     }
 
     function returnModule() {
+        res.N_o += N_o;
         console.log(Pnew);
         console.log(Swnew);
         console.log('done simulating.');
