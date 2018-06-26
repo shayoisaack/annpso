@@ -6,41 +6,47 @@ var wellsObj = [];
 function drawGrid(res, wells) {
     if (wells == undefined) wells = [];
 
-    var gridblocksX = res.cell.length;
-    var gridblocksY = res.cell[0].length;
-    var gridSize = $('#main').width() / 2;
+    let gridblocksX = res.rows;
+    let gridblocksY = res.cols;
+    let gridSize = $('#main').width() / 2;
     $('#other').css('height', gridSize + 'px');
-    var $grid = $('<table id="grid-table" style="border: 1px solid black; margin: 0; padding: 0; width: ' + gridSize + 'px; height: ' + gridSize * gridblocksX / gridblocksY + 'px"></table>');
-    var cellSize = 1 / gridblocksY * 100;
-    var counter = 0;
-    for (var i = 0; i < gridblocksX; i++) {
-        $row = $('<tr></tr>');
-        for (var j = 0; j < gridblocksY; j++) {
-            $td = $('<td></td>');
+    let $grid = $('<table id="grid-table" style="border: 1px solid black; margin: 0; padding: 0; width: ' + gridSize + 'px; height: ' + gridSize * gridblocksX / gridblocksY + 'px"></table>');
+    let cellSize = 1 / gridblocksY;
+    cellSize = cellSize * gridSize;
+    let counter = 0;
+    for (let i = 0; i < gridblocksX; i++) {
+        let $row = $('<tr></tr>');
+        for (let j = 0; j < gridblocksY; j++) {
+            let $td = $('<td class="cell"></td>');
             $td.attr('id', counter);
             $td.attr('data-x', i);
             $td.attr('data-y', j);
-            $td.css('width', cellSize + '%');
-            $td.css('height', cellSize + '%');
+            $td.css('width', cellSize + 'px');
+            $td.css('height', cellSize + 'px');
             //$td.css('background', getColorForPercentage(res.cell[i][j].p/4500));
             $td.css('background', getColorForPercentage(res.cell[i][j].So));
-            //$td.css('background', getColorForPercentage(res.cell[i][j].kx*res.cell[i][j].So*res.cell[i][j].poro/100));
-            for (var wi = 0; wi < wells.length; wi++) {
-                if (wells[wi].loc.x == i && wells[wi].loc.y == j) {
-                    console.log('well here', i, j);
-                    $td.css('background', 'rgba(0,0,0)');
-                }
-            }
             $row.append($td);
         }
         counter++;
         $grid.append($row);
     }
     $('#map').html($grid);
+    drawWells(wells);
 }
 
 function drawWells(wells) {
-
+    let $cells = $('.cell');
+    console.log($cells.length);
+    for(let n = 0; n < $cells.length; n++){
+        let i = $($cells.get(n)).attr('data-x');
+        let j = $($cells.get(n)).attr('data-y');
+        wells.forEach(function(well){
+            if(well.loc.x == i && well.loc.y == j){
+                console.log(i, j);
+                $cells.get(n).style.background = '#000';
+            }
+        });
+    }
 }
 
 function calcOIP(res) {
@@ -83,36 +89,6 @@ var getColorForPercentage = function(pct) {
 
 //socket code handlers
 
-socket.on('reservoir', function(res, wells) {
-    console.log('res', res);
-    console.log('wells', wells)
-    resObj = res;
-    wellsObj = wells;
-    //wellsObj = [{ loc: { x: 1, y: 3 }, p_bh: 3350 }, { loc: { x: 25, y: 25 }, p_bh: 3350 }, { loc: { x: 30, y: 25 }, p_bh: 3350 }];
-    //res = modifyRes(res);
-    drawGrid(resObj, wellsObj);
-    console.log(res.OOIP, 'bbl');
-    $('#ooip').html(res.OOIP);
-    $('td').on('click', function(e) {
-        $(this).css('background', '#000'); //getColorForPercentage($(this).data('x') / 50));
-        var x = $(this).data('x');
-        var y = $(this).data('y');
-        console.log(x, y);
-        // for (var count = 1; count < 10; count++) {
-        //     for (var i = 0; i < res.cell.length; i++) {
-        //         for (var j = 0; j < res.cell[0].length; j++) {
-        //             if ((i == x + count && j < x + 10 && j > x - 10) || (j == y + count && i < x + 10 && i > x - 10)) {
-        //                 var item = $('body').find('[data-x="' + i + '"][data-y="' + j + '"]');
-        //                 item.css('background', getColorForPercentage(count / 10));
-        //                 console.log(item);
-        //             }
-        //         }
-        //     }
-
-        // }
-        //socket.emit('chat message', $(this).data('x'));
-    })
-});
 
 function modifyRes(res) {
     res.cell[1][3].So = 0.4;

@@ -14,7 +14,16 @@ app.engine('html', require('ejs').renderFile);
 app.set('view engine', 'ejs');
 app.use(express.static(__dirname + '/public'));
 app.get('/', function(req, res) {
-    res.render('app.ejs');
+    res.render('simulate.ejs');
+});
+app.get('/placewells', function(req, res){
+    res.render('placewells.ejs');
+});
+app.get('/reservoir', function(req, res){
+    res.render('reservoir.ejs');
+});
+app.get('/maps', function(req, res){
+    res.render('maps.ejs');
 });
 
 //initiate reservoir and pass to client
@@ -35,6 +44,12 @@ const net = new brain.NeuralNetwork({
     hiddenLayers: [10, 10],
     learningRate: 0.6 // global learning rate, useful when training using streams
 });
+
+// //load PSO
+// const PSO = require('./psomultiple.js').PSO;
+// let pso = new PSO();
+const numParticles = 10;
+const numIterations = 20;
 
 io.on('connection', function(socket) {
     console.log('connected');
@@ -77,6 +92,25 @@ io.on('connection', function(socket) {
         let newWells = [new Well(10, 8)];
         let N_o = net.run(newRes.linearize(newWells, timesteps));
         io.emit('simulate-ann-final', N_o, clone(newRes), clone(newWells));
+    });
+
+    socket.on('placewells-ann-pso', function(resObj, numWells){
+        console.log(resObj);
+        console.log(numWells);
+        const PSO = require('./psomultiple.js').PSO;
+        let pso = new PSO();
+        let netJSON = fs.readFileSync('network.json', 'utf8');
+        net.fromJSON(JSON.parse(netJSON));
+
+        pso.init(numParticles, gridblocks, gridblocks, numWells);
+        for(let i = 0; i < numIterations; i++){
+            pso.step(clone(res), timesteps, function(res, wells, timesteps){
+                let val = net.run(res.linearize(wells, timesteps));
+                return val[0]*1e10;
+            });
+        }
+        let bestWellPattern = pso.getBestWellPattern();
+        io.emit('placewells-ann-pso-result', clone(bestWellPattern));
     });
     //when disconnected
     socket.on('disconnect', function() {

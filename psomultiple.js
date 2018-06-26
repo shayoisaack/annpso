@@ -18,6 +18,7 @@ let PSO = function (){
     this.particles = [];
     this.gBest = - Infinity;
     this.gBestVal = null;
+    this.gBestParticle = {};
     this.numParticles = 0;
     this.setObjective = function(objectiveFunction, res, timesteps){
         this.objectiveFunction = objectiveFunction;
@@ -52,6 +53,7 @@ let PSO = function (){
     this.step = function(res, timesteps, objectiveFunction){
         let gBest = this.gBest;
         let gBestVal = this.gBestVal;
+        let gBestParticle = this.gBestParticle;
         this.particles.forEach(function(particle){
             //find fitness of particle and assign it
             //console.log(particle.x, particle.y);
@@ -71,6 +73,7 @@ let PSO = function (){
                 gBest = particle.fitness;
                 gBestVal.x = particle.x;
                 gBestVal.y = particle.y;
+                gBestParticle = particle;
             }
             //console.log(particle.pBest, particle.pBestVal);
             //console.log(gBest, gBestVal);
@@ -98,6 +101,7 @@ let PSO = function (){
         });
         this.gBest = gBest;
         this.gBestVal = gBestVal;
+        this.gBestParticle = gBestParticle;
     };
 
     this.printParticles = function(){
@@ -111,6 +115,10 @@ let PSO = function (){
         this.gBestVal = null;
 
     };
+
+    this.getBestWellPattern = function(){
+        return this.gBestParticle.makeWells();
+    }
 };
 
 exports.PSO = PSO;

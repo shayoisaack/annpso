@@ -1,0 +1,81 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <title>ANNPSO</title>
+    <meta name='viewport' content='initial-scale=1' />
+    <link rel='stylesheet' href='main.css' />
+</head>
+
+<body>
+<div id='header' class='box'>
+    <a href="reservoir"><span class='header-item'>Reservoir</span></a>
+    <a href="/"><span class='header-item'>Simulate</span></a>
+    <a href="/placewells"><span class='header-item selected'>Place wells</span></a>
+    <a href="/maps"><span class='header-item'>Maps</span></a>
+    <span class='header-item right' style='color: rgba(0,0,0,0.8); cursor: none;'>Well Placement Using ANN</span>
+</div>
+    <div id='main'>
+        <div id='map'></div>
+        <div id='other'>
+            <div id='colorbar'></div>
+            <div id='labels'>
+                <div class='label'>0%</div>
+                <div class='label' style='text-align: center;'>So</div>
+                <div class='label' style='text-align: right;'>100%</div>
+            </div>
+            <div id='chart-box'>
+                <canvas id='chart'></canvas>
+            </div>
+            <div id='other-info'>
+                <div class='row'>Info</div>
+                <div class='row'>
+                    <div class='left row-item'>Day: <span id="day">0</span></div>
+                    <div class='left row-item'>OOIP: <span id="ooip"></span> MMSTB</div>
+                    <div class='left row-item'>Recovered: <span id="recovered"></span> MMSTB</div>
+                    <div class='left row-item'>Remaining: <span id="remaining"></span> MMSTB</div>
+                </div>
+                <div class='row'>
+                    <div class='left row-item'>Initial Pressure: <span>4500 psi</span></div>
+                    <div class='left row-item'>Recovery Factor: <span id="rf"></span></div>
+                </div>
+            </div>
+        </div>
+        <select id='choose-res'>
+            <option value="volvo">Reservoir 1 (50 x 50)</option>
+            <option value="saab">Saab</option>
+            <option value="mercedes">Mercedes</option>
+            <option value="audi">Audi</option>
+        </select>
+    </div>
+    <div id='controls'>
+        <div class='section'>
+            <div class='section-header'>Place wells</div>
+            <div class='button'>Manually</div>
+            <br/>
+            <div class='button'>Use ANN</div><span class='button-text'></span>
+            <br/>
+            <div class='button' id="placewells-ann-pso">Use ANN-PSO*</div><span class='button-text'></span>
+            <br/>
+            <div class='button'>Use Simulator (Brute force)</div><span class='button-text'></span>
+            <br/>
+            <div class='button'>Use All</div>
+        </div>
+        <div class='section'>
+            <div class='section-header'>Simulate</div>
+            <div class='button' id='simulate-simulator'>Use Simulator</div><span class='button-text' id='simulate-simulator-text'></span>
+            <br/>
+            <div class='button' id='simulate-ann'>Use ANN*</div><span class='button-text' id="simulate-ann-text"></span>
+            <br/>
+            <div class='button' id='simulate-all'>Use All</div>
+        </div>
+        <div style='padding: 10px; font-size: 0.8em;'>*The method proposed in this research. Note perfomance improvements compared to traditional approaches.</div>
+    </div>
+</body>
+<script type="text/javascript" src="./jquery.js"></script>
+<script src="clone.js"></script>
+<script src="/socket.io/socket.io.js"></script>
+<script src='Chart.js'></script>
+<script src='main.js'></script>
+<script src='placewells.js'></script>
+</html>
