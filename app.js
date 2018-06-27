@@ -112,6 +112,24 @@ io.on('connection', function(socket) {
         let bestWellPattern = pso.getBestWellPattern();
         io.emit('placewells-ann-pso-result', clone(bestWellPattern));
     });
+
+    socket.on('placewells-ann', function(resObj, numWells){
+
+    });
+
+    socket.on('draw-map-simulator', function(resObj, i, j){
+        let newRes = simulate(clone(res), [new Well(i, j)], timesteps);
+        let N_o = newRes.N_o;
+        io.emit('draw-map-simulator-result', N_o, i, j);
+    });
+
+    socket.on('draw-map-ann', function(resObj, i, j){
+        let netJSON = fs.readFileSync('network.json', 'utf8');
+        net.fromJSON(JSON.parse(netJSON));
+        let N_o = net.run(res.linearize([new Well(i, j)], timesteps));
+        console.log(N_o);
+        io.emit('draw-map-ann-result', N_o, i, j);
+    });
     //when disconnected
     socket.on('disconnect', function() {
         console.log('disconnected');

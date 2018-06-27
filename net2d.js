@@ -13,7 +13,7 @@ let examples = [];
 
 const timesteps = 10;
 const gridblocks = 15;
-const numWells = 3;
+const numWells = 1;
 const netDiv = 1e10;
 
 let res = new Res(gridblocks, gridblocks);

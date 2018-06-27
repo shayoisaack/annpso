@@ -18,11 +18,11 @@
     <div id='main'>
         <div id='map'></div>
         <div id='other'>
-            <div id='colorbar'></div>
+            <div id='colorbar' class="maps"></div>
             <div id='labels'>
-                <div class='label'>0%</div>
-                <div class='label' style='text-align: center;'>So</div>
-                <div class='label' style='text-align: right;'>100%</div>
+                <div class='label'>Min</div>
+                <div class='label' style='text-align: center;'>Q'</div>
+                <div class='label' style='text-align: right;'>Max</div>
             </div>
             <div id='chart-box'>
                 <canvas id='chart'></canvas>
@@ -50,32 +50,19 @@
     </div>
     <div id='controls'>
         <div class='section'>
-            <div class='section-header'>Wells</div>
-            <div class='button'>Manually Place Well</div>
-        </div>
-        <div class='section'>
-            <div class='section-header'>Simulate</div>
-            <div class='button' id='simulate-simulator'>Use Simulator</div><span class='button-text' id='simulate-simulator-text'></span>
+            <div class='section-header'>Draw Production Map</div>
+            <div class='button' id='draw-map-simulator'>Use Simulator</div><span class='button-text' id='simulate-simulator-text'></span>
             <br/>
-            <div class='button' id='simulate-ann'>Use ANN*</div><span class='button-text' id="simulate-ann-text"></span>
+            <div class='button' id='draw-map-ann'>Use ANN*</div><span class='button-text' id="simulate-ann-text"></span>
             <br/>
-            <div class='button' id='simulate-all'>Use All</div>
-        </div>
-        <div class='section'>
-            <div class='section-header'>Solve</div>
-            <div class='button'>Use Simulator</div><span class='button-text'>-</span>
-            <br/>
-            <div class='button'>Use ANN</div><span class='button-text'></span>
-            <br/>
-            <div class='button'>Use ANN-PSO*</div><span class='button-text'></span>
-            <br/>
-            <div class='button'>Use All</div>
         </div>
         <div style='padding: 10px; font-size: 0.8em;'>*The method proposed in this research. Note perfomance improvements compared to traditional approaches.</div>
     </div>
 </body>
 <script type="text/javascript" src="./jquery.js"></script>
+<scrip src="clone.js"></scrip>
 <script src="/socket.io/socket.io.js"></script>
 <script src='Chart.js'></script>
 <script src='main.js'></script>
+<script src='maps.js'></script>
 </html>

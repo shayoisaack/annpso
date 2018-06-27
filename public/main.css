@@ -129,6 +129,11 @@
         margin-bottom: 4px;
         background: linear-gradient(to right, red, green);
     }
+#colorbar.maps {
+    height: 20px;
+    margin-bottom: 4px;
+    background: linear-gradient(to right, white, black);
+}
 
     #labels {
         width: 100%;
