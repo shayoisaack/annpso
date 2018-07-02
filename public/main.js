@@ -1,4 +1,4 @@
-//declare glboal objects
+//declare global objects
 var socket = io();
 var resObj = {};
 var wellsObj = [];
@@ -23,8 +23,8 @@ function drawGrid(res, wells) {
             $td.attr('data-y', j);
             $td.css('width', cellSize + 'px');
             $td.css('height', cellSize + 'px');
-            //$td.css('background', getColorForPercentage(res.cell[i][j].p/4500));
-            $td.css('background', getColorForPercentage(res.cell[i][j].So));
+            $td.css('background', getColorForPercentage(res.cell[i][j].p/res.Pi));
+            //$td.css('background', getColorForPercentage(res.cell[i][j].So));
             $row.append($td);
         }
         counter++;
@@ -48,17 +48,6 @@ function drawWells(wells) {
         });
     }
 }
-
-function calcOIP(res) {
-    var OIP = 0;
-    for (var i = 0; i < res.cell.length; i++) {
-        for (var j = 0; j < res.cell[0].length; j++) {
-            OIP += res.cell[i][j].dx * res.cell[i][j].dy * res.cell[i][j].dz * res.cell[i][j].poro * (1 - res.cell[i][j].Sw);
-        }
-    }
-    return OIP / 5.614583;
-}
-//drawGrid(50);
 
 var percentColors = [
     { pct: 0.0, color: { r: 0xff, g: 0x00, b: 0 } },
@@ -113,43 +102,87 @@ socket.on('simulation-result', function(N_o) {
     console.log('N_o', N_o);
 });
 
-var ctx = document.getElementById("chart").getContext('2d');
-var myChart = new Chart(ctx, {
-    type: 'line',
-    data: {
-        labels: ["day 0", "day 10", "day 20", "day 30", "day 40", "day 50"],
-        datasets: [{
-            label: 'Cummulative Production (MSTB)',
-            data: [0, 4, 10, 20, 28, 32],
-            backgroundColor: [
-                'rgba(255, 99, 132, 0.2)',
-                'rgba(54, 162, 235, 0.2)',
-                'rgba(255, 206, 86, 0.2)',
-                'rgba(75, 192, 192, 0.2)',
-                'rgba(153, 102, 255, 0.2)',
-                'rgba(255, 159, 64, 0.2)'
-            ],
-            borderColor: [
-                'rgba(255,99,132,1)',
-                'rgba(54, 162, 235, 1)',
-                'rgba(255, 206, 86, 1)',
-                'rgba(75, 192, 192, 1)',
-                'rgba(153, 102, 255, 1)',
-                'rgba(255, 159, 64, 1)'
-            ],
-            borderWidth: 1
-        }]
-    },
-    options: {
-        scales: {
-            yAxes: [{
-                ticks: {
-                    beginAtZero: true
-                }
-            }]
+// var ctx = document.getElementById("chart").getContext('2d');
+// var myChart = new Chart(ctx, {
+//     type: 'line',
+//     data: {
+//         labels: ["day 0", "day 10", "day 20", "day 30", "day 40", "day 50"],
+//         datasets: [{
+//             label: 'Cummulative Production (MMSTB)',
+//             data: [0, 4, 10, 20, 28, 32],
+//             backgroundColor: [
+//                 'rgba(255, 99, 132, 0.2)',
+//                 'rgba(54, 162, 235, 0.2)',
+//                 'rgba(255, 206, 86, 0.2)',
+//                 'rgba(75, 192, 192, 0.2)',
+//                 'rgba(153, 102, 255, 0.2)',
+//                 'rgba(255, 159, 64, 0.2)'
+//             ],
+//             borderColor: [
+//                 'rgba(255,99,132,1)',
+//                 'rgba(54, 162, 235, 1)',
+//                 'rgba(255, 206, 86, 1)',
+//                 'rgba(75, 192, 192, 1)',
+//                 'rgba(153, 102, 255, 1)',
+//                 'rgba(255, 159, 64, 1)'
+//             ],
+//             borderWidth: 1
+//         }]
+//     },
+//     options: {
+//         scales: {
+//             yAxes: [{
+//                 ticks: {
+//                     beginAtZero: true
+//                 }
+//             }]
+//         }
+//     }
+// });
+//
+// var datas = [
+//     [0, 0, 0],    [1, 10, 5],   [2, 23, 15],  [3, 17, 9],   [4, 18, 10],  [5, 9, 5],
+//     [6, 11, 3],   [7, 27, 19],  [8, 33, 25],  [9, 40, 32],  [10, 32, 24], [11, 35, 27],
+//     [12, 30, 22], [13, 40, 32], [14, 42, 34], [15, 47, 39], [16, 44, 36], [17, 48, 40],
+//     [18, 52, 44], [19, 54, 46], [20, 42, 34], [21, 55, 47], [22, 56, 48], [23, 57, 49],
+//     [24, 60, 52], [25, 50, 42], [26, 52, 44], [27, 51, 43], [28, 49, 41], [29, 53, 45],
+//     [30, 55, 47], [31, 60, 52], [32, 61, 53], [33, 59, 51], [34, 62, 54], [35, 65, 57],
+//     [36, 62, 54], [37, 58, 50], [38, 55, 47], [39, 61, 53], [40, 64, 56], [41, 65, 57],
+//     [42, 63, 55], [43, 66, 58], [44, 67, 59], [45, 69, 61], [46, 69, 61], [47, 70, 62],
+//     [48, 72, 64], [49, 68, 60], [50, 66, 58], [51, 65, 57], [52, 67, 59], [53, 70, 62],
+//     [54, 71, 63], [55, 72, 64], [56, 73, 65], [57, 75, 67], [58, 70, 62], [59, 68, 60],
+//     [60, 64, 56], [61, 60, 52], [62, 65, 57], [63, 67, 59], [64, 68, 60], [65, 69, 61],
+//     [66, 70, 62], [67, 72, 64], [68, 75, 67], [69, 80, 72]
+// ];
+var chart, data, options;
+var chartCount = 0;
+google.charts.load('current', {packages: ['corechart', 'line']});
+google.charts.setOnLoadCallback(drawCurveTypes);
+
+function drawCurveTypes() {
+    data = new google.visualization.DataTable();
+    data.addColumn('number', 'X');
+    data.addColumn('number', 'simulator');
+    //data.addColumn('number', 'ANN');
+
+    data.addRows([[0,0]]);//[[0, 0, 0],    [1, 10, 5],   [2, 23, 15],  [3, 17, 9],   [4, 18, 10],  [5, 9, 5]]);
+    chartCount++;
+
+    options = {
+        hAxis: {
+            title: 'Time [days]'
+        },
+        vAxis: {
+            title: 'Production [STB/d]'
+        },
+        series: {
+            1: {curveType: 'function'}
         }
-    }
-});
+    };
+
+    chart = new google.visualization.LineChart(document.getElementById('chart'));
+    chart.draw(data, options);
+}
 
 let startDate;
 let endDate;
@@ -166,19 +199,25 @@ $('#simulate-simulator').on('click', function() {
 });
 
 socket.on('simulate-simulator-final', function(obj, wells) {
-    if(obj.day > 1000) return;
+    if(obj.day > 5000) return;
     console.log('res', obj);
     endDate = new Date();
     let time = (endDate.getTime() - startDate.getTime()) / 1000;
     console.log('time taken: ', time, 's');
-    $('#simulate-simulator-text').html((Math.trunc(obj.N_o*100/1e6)/100)+'mmSTB'+' in '+time + 's');
+    $('#simulate-simulator-text').html((Math.trunc(obj.N_o*100/1e6)/100)+'MMSTB'+' in '+time + 's');
     drawGrid(obj, wells);
     let recovered = 0;
     $('#day').html(obj.day);
     $('#recovered').html(recovered = Math.trunc(obj.N_o/1000000*100)/100);
     $('#remaining').html(Math.trunc((obj.OOIP - recovered)*100)/100);
-    $('#rf').html(Math.trunc(recovered/ obj.OOIP*100)/100)
+    $('#rf').html(Math.trunc(recovered/ obj.OOIP*100)/100);
+    //$('#pr').html(obj.Pr);
     console.log('obj ', obj);
+
+    data.insertRows(chartCount, [[obj.day, obj.qo_]]);//, obj.qo_ + Math.random()*1e4+2.5e5]]);
+    chart.draw(data, options);
+    chartCount++;
+
     socket.emit('simulate-simulator', obj, wells);
 });
 
@@ -195,7 +234,7 @@ socket.on('simulate-ann-final', function(N_o, res, wells) {
     endDateANN = new Date();
     let time = (endDateANN.getTime() - startDateANN.getTime()) / 1000;
     console.log('time taken: ', time, 's');
-    $('#simulate-ann-text').html((Math.trunc(N_o*1e11*100/1e6)/100)+'mmSTB'+' in '+time + 's');
+    $('#simulate-ann-text').html((Math.trunc(N_o*1e11*100/1e6)/100)+'MMSTB'+' in '+time + 's');
     drawGrid(res, wells);
     let recovered;
     //$('#day').html(res.day);

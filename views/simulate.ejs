@@ -25,7 +25,7 @@
                 <div class='label' style='text-align: right;'>100%</div>
             </div>
             <div id='chart-box'>
-                <canvas id='chart'></canvas>
+                <div id='chart'></div>
             </div>
             <div id='other-info'>
                 <div class='row'>Info</div>
@@ -36,8 +36,9 @@
                     <div class='left row-item'>Remaining: <span id="remaining"></span> MMSTB</div>
                 </div>
                 <div class='row'>
-                    <div class='left row-item'>Initial Pressure: <span>4500 psi</span></div>
-                    <div class='left row-item'>Recovery Factor: <span id="rf"></span></div>
+                    <div class='left row-item'>Pi: <span>4500 psi</span></div>
+                    <div class='left row-item'>RF: <span id="rf"></span></div>
+                    <div class='left row-item'>Average Pr: <span id="pr"></span></div>
                 </div>
             </div>
         </div>
@@ -76,7 +77,7 @@
 </body>
 <script type="text/javascript" src="./jquery.js"></script>
 <script src="/socket.io/socket.io.js"></script>
-<script src='Chart.js'></script>
+<script src='loader.js'></script>
 <script src='main.js'></script>
 <script src='simulate.js'></script>
 </html>

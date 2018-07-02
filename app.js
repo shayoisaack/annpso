@@ -32,9 +32,10 @@ let Res = require('./res2d.js').Res;
 const Well = require('./well.js').Well;
 
 const gridblocks = 15;
+const rate = 200000;
 let res = new Res(gridblocks, gridblocks);
-let wells = [new Well(10, 8)];
-let timesteps = 10;
+let wells = [new Well(7, 7, 'rate', 3350, rate, rate/10)];
+let timesteps = 1;
 
 //load neural network
 const brain = require('brain.js');
@@ -63,7 +64,7 @@ io.on('connection', function(socket) {
     });
 
     socket.on('simulate-simulator', function(resObj, wellsObj) {
-        console.log('res ', resObj);
+        //console.log('res ', resObj);
         // let promise = new Promise(function(resolve, reject) {
         //     try {
         //         res = simulate(res, wellsObj, 1);

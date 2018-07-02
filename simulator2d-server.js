@@ -1,125 +1,115 @@
 const extrapolate = require('./utilities.js').extrapolate;
 const zeros = require('./utilities.js').zeros;
 const exists = require('./utilities.js').exists;
-// const Bo = require('./utilities.js').Bo;
-// const d1_Bo_dPo = require('./utilities.js').d1_Bo_dPo;
-// const Bw = require('./utilities.js').Bw;
-// const d1_Bw_dPw = require('./utilities.js').d1_Bw_dPw;
-// const dPcow_dSw = require('./utilities.js').dPcow_dSw;
-// const visc_o = require('./utilities.js').visc_o;
-// const visc_w = require('./utilities.js').visc_w;
-// const p_cow = require('./utilities.js').p_cow;
 const swof = require('./pvt.js').swof;
 const pvt = require('./pvt.js').pvt;
 const gauss = require('./gaussian-elimination-master/gauss.js');
+//var fs = require('fs');
 
 //some constants
-const dt = 0.1; // timestep is 1 day
+const dt = 1; // timestep is 1 day
 const Rs = 0.4;
 const Pbp = 3337.0; //psi
 const Pref = 14.7;
-const cr = 3.0E-6;
+const cr = 3.0e-6;
 const rho = {};
 rho.o = 49.1;
 rho.w = 64.79;
 rho.g = 0.06054;
-const Pi = 6000; //initial pressure (psi)
 
 let simulate = function(res, wells, timesteps) {
     //set defaults
-    if (timesteps == undefined) timesteps = Infinity;
-    if (wells == undefined) wells = [];
+    if (timesteps === undefined) timesteps = 1;//Infinity;
+    if (wells === undefined) wells = [];
 
-    var N_o = 0;
-    var N_w = 0;
+    let N_o = 0;
+    let N_w = 0;
     //simulate
-    for (var timeIndex = 1; timeIndex <= timesteps; timeIndex++) { //number of timesteps to iterate (in days)
+    for (let timeIndex = 1; timeIndex <= timesteps; timeIndex++) { //number of timesteps to iterate (in days)
         //console.log('/////////////////////////////////////////////////////////////// ', 'day ', timeIndex, '\n');
 
         //set wells
-        var q_ = res.addWells(wells);
+        let q_ = res.addWells(wells);
         //console.log(q_);
         N_o += q_.qo_;
         N_w += q_.qw_;
+        //
+        res.qo_ = q_.qo_;
+        res.qw_ = q_.qw_;
 
-        var A = zeros(res.rows * res.cols, res.cols * res.rows);
-        var darr = [];
+        let A = zeros(res.rows * res.cols, res.cols * res.rows);
+        let darr = [];
 
-        var Txo_neg = zeros(res.rows, res.cols);
-        var Txo_pos = zeros(res.rows, res.cols);
-        var Txw_neg = zeros(res.rows, res.cols);
-        var Txw_pos = zeros(res.rows, res.cols);
-        var Tyo_pos = zeros(res.rows, res.cols);
-        var Tyo_neg = zeros(res.rows, res.cols);
-        var Tyw_pos = zeros(res.rows, res.cols);
-        var Tyw_neg = zeros(res.rows, res.cols);
-        var Csww = zeros(res.rows, res.cols);
-        var Cswo = zeros(res.rows, res.cols);
-        var Cpoo = zeros(res.rows, res.cols);
-        var Cpow = zeros(res.rows, res.cols);
+        let Txo_neg = zeros(res.rows, res.cols);
+        let Txo_pos = zeros(res.rows, res.cols);
+        let Txw_neg = zeros(res.rows, res.cols);
+        let Txw_pos = zeros(res.rows, res.cols);
+        let Tyo_pos = zeros(res.rows, res.cols);
+        let Tyo_neg = zeros(res.rows, res.cols);
+        let Tyw_pos = zeros(res.rows, res.cols);
+        let Tyw_neg = zeros(res.rows, res.cols);
+        let Csww = zeros(res.rows, res.cols);
+        let Cswo = zeros(res.rows, res.cols);
+        let Cpoo = zeros(res.rows, res.cols);
+        let Cpow = zeros(res.rows, res.cols);
 
-        for (var i = 0; i < res.cell.length; i++) { //iterate on each gridblock
-            for (var j = 0; j < res.cell[0].length; j++) {
-                var a, b, c, d;
-                var alpha;
-                Cpoo[i][j] = res.cell[i][j].poro * (1 - res.cell[i][j].Sw) / dt * ((cr / res.Bo(i, j) + res.d1_Bo_dPo(i, j)));
+        for (let i = 0; i < res.rows; i++) { //iterate on each gridblock
+            for (let j = 0; j < res.cols; j++) {
+                let alpha;
+                let a, b, c, d, e, f;
+                Cpoo[i][j] = res.cell[i][j].poro * (1 - res.cell[i][j].Sw) / dt * ((cr / res.Bo(i, j)) + res.d1_Bo_dPo(i, j));
                 Cswo[i][j] = -res.cell[i][j].poro / (res.Bo(i, j) * dt);
-                Cpow[i][j] = (res.cell[i][j].poro * res.cell[i][j].Sw) / dt * (cr / res.Bw(i, j) + res.d1_Bw_dPw(i, j));
+                Cpow[i][j] = (res.cell[i][j].poro * res.cell[i][j].Sw) / dt * ((cr / res.Bw(i, j)) + res.d1_Bw_dPw(i, j));
                 Csww[i][j] = res.cell[i][j].poro / (res.Bw(i, j) * dt) - res.dPcow_dSw(i, j) * Cpow[i][j];
-                console.log('Cpoo: ',Cpoo[i][j], 'Cpow', Cpow[i][j], 'Cswo', Cswo[i][j], 'Csww', Csww[i][j]);
+                //console.log('Cpoo: ',Cpoo[i][j], 'Cpow', Cpow[i][j], 'Cswo', Cswo[i][j], 'Csww', Csww[i][j]);
+                //return;
+
+                // Cpoo[i][j] = 0.0001;
+                // Cswo[i][j] = 0.0001;
+                // Cpow[i][j] = 0.0001;
+                // Csww[i][j] = 0.0001;
 
                 alpha = -Cswo[i][j] / Csww[i][j];
                 //console.log(alpha);
 
-                if (!exists(res.cell, i - 1, j)) {
-                    lambda_x_o_neg = 0;
-                    lambda_x_w_neg = 0;
-                    Txo_neg[i][j] = 0
-                    Txw_neg[i][j] = 0
-                } else {
-                    lambda_x_o_neg = lambda_x_o_neg = (res.cell[i - 1][j].p) >= res.cell[i][j].p ? res.cell[i - 1][j].kx / res.visc_o(i - 1, j) / res.Bo(i - 1, j) : res.cell[i][j].kx / res.visc_o(i, j) / res.Bo(i, j);
-                    lambda_x_w_neg = lambda_x_w_neg = (res.cell[i - 1][j].p) >= res.cell[i][j].p ? res.cell[i - 1][j].kx / res.visc_w(i - 1, j) / res.Bw(i - 1, j) : res.cell[i][j].kx / res.visc_w(i, j) / res.Bw(i, j);
+                let lambda_x_o_neg = 0;
+                let lambda_x_o_pos = 0;
+                let lambda_x_w_neg = 0;
+                let lambda_x_w_pos = 0;
+                let lambda_y_o_neg = 0;
+                let lambda_y_o_pos = 0;
+                let lambda_y_w_neg = 0;
+                let lambda_y_w_pos = 0;
+
+                if (exists(res.cell, i - 1, j)) {
+                    lambda_x_o_neg = (res.cell[i - 1][j].p) >= res.cell[i][j].p ? res.kro(i-1, j) / res.visc_o(i - 1, j) / res.Bo(i - 1, j) : res.kro(i,j) / res.visc_o(i, j) / res.Bo(i, j);
+                    lambda_x_w_neg = (res.cell[i - 1][j].p) >= res.cell[i][j].p ? res.krw(i-1,j) / res.visc_w(i - 1, j) / res.Bw(i - 1, j) : res.krw(i,j) / res.visc_w(i, j) / res.Bw(i, j);
                     Txo_neg[i][j] = 2 * lambda_x_o_neg / res.cell[i][j].dx / (res.cell[i - 1][j].dx / res.cell[i - 1][j].kx + res.cell[i][j].dx / res.cell[i][j].kx);
                     Txw_neg[i][j] = 2 * lambda_x_w_neg / res.cell[i][j].dx / (res.cell[i - 1][j].dx / res.cell[i - 1][j].kx + res.cell[i][j].dx / res.cell[i][j].kx);
                 }
 
-                if (!exists(res.cell, i + 1, j)) {
-                    lambda_x_o_pos = 0;
-                    lambda_x_w_pos = 0;
-                    Txo_pos[i][j] = 0;
-                    Txw_pos[i][j] = 0;
-                } else {
-                    lambda_x_o_pos = lambda_x_o_pos = (res.cell[i + 1][j].p >= res.cell[i][j].p) ? res.cell[i + 1][j].kx / res.visc_o(i + 1, j) / res.Bo(i + 1, j) : res.cell[i][j].kx / res.visc_o(i, j) / res.Bo(i, j);
-                    lambda_x_w_pos = lambda_x_w_pos = (res.cell[i + 1][j].p >= res.cell[i][j].p) ? res.cell[i + 1][j].kx / res.visc_w(i + 1, j) / res.Bw(i + 1, j) : res.cell[i][j].kx / res.visc_w(i, j) / res.Bw(i, j);
+                if (exists(res.cell, i + 1, j)) {
+                    lambda_x_o_pos = (res.cell[i + 1][j].p >= res.cell[i][j].p) ? res.kro(i+1,j) / res.visc_o(i + 1, j) / res.Bo(i + 1, j) : res.kro(i,j) / res.visc_o(i, j) / res.Bo(i, j);
+                    lambda_x_w_pos = (res.cell[i + 1][j].p >= res.cell[i][j].p) ? res.krw(i+1,j) / res.visc_w(i + 1, j) / res.Bw(i + 1, j) : res.krw(i,j) / res.visc_w(i, j) / res.Bw(i, j);
                     Txo_pos[i][j] = 2 * lambda_x_o_pos / res.cell[i][j].dx / (res.cell[i + 1][j].dx / res.cell[i + 1][j].kx + res.cell[i][j].dx / res.cell[i][j].kx);
                     Txw_pos[i][j] = 2 * lambda_x_w_pos / res.cell[i][j].dx / (res.cell[i + 1][j].dx / res.cell[i + 1][j].kx + res.cell[i][j].dx / res.cell[i][j].kx);
                 }
 
-                if (!exists(res.cell, i, j - 1)) {
-                    lambda_y_o_neg = 0;
-                    lambda_y_w_neg = 0;
-                    Tyo_neg[i][j] = 0;
-                    Tyw_neg[i][j] = 0;
-                } else {
-                    lambda_y_o_neg = lambda_y_o_neg = (res.cell[i][j - 1].p) >= res.cell[i][j].p ? res.cell[i][j - 1].ky / res.visc_o(i, j - 1) / res.Bo(i, j - 1) : res.cell[i][j].ky / res.visc_o(i, j) / res.Bo(i, j);
-                    lambda_y_w_neg = lambda_y_w_neg = (res.cell[i][j - 1].p) >= res.cell[i][j].p ? res.cell[i][j - 1].ky / res.visc_w(i, j - 1) / res.Bw(i, j - 1) : res.cell[i][j].ky / res.visc_w(i, j) / res.Bw(i, j);
+                if (exists(res.cell, i, j - 1)) {
+                    lambda_y_o_neg = (res.cell[i][j - 1].p) >= res.cell[i][j].p ? res.kro(i, j-1) / res.visc_o(i, j - 1) / res.Bo(i, j - 1) : res.kro(i,j) / res.visc_o(i, j) / res.Bo(i, j);
+                    lambda_y_w_neg = (res.cell[i][j - 1].p) >= res.cell[i][j].p ? res.krw(i, j-1) / res.visc_w(i, j - 1) / res.Bw(i, j - 1) : res.krw(i,j) / res.visc_w(i, j) / res.Bw(i, j);
                     Tyo_neg[i][j] = 2 * lambda_y_o_neg / res.cell[i][j].dy / (res.cell[i][j - 1].dy / res.cell[i][j - 1].ky + res.cell[i][j].dy / res.cell[i][j].ky);
                     Tyw_neg[i][j] = 2 * lambda_y_w_neg / res.cell[i][j].dy / (res.cell[i][j - 1].dy / res.cell[i][j - 1].ky + res.cell[i][j].dy / res.cell[i][j].ky);
                 }
 
-                if (!exists(res.cell, i, j + 1)) {
-                    lambda_y_o_pos = 0;
-                    lambda_y_w_pos = 0;
-                    Tyo_pos[i][j] = 0;
-                    Tyw_pos[i][j] = 0;
-                } else {
-                    lambda_y_o_pos = lambda_y_o_pos = (res.cell[i][j + 1].p >= res.cell[i][j].p) ? res.cell[i][j + 1].ky / res.visc_o(i, j + 1) / res.Bo(i, j + 1) : res.cell[i][j].ky / res.visc_o(i, j) / res.Bo(i, j);
-                    lambda_y_w_pos = lambda_y_w_pos = (res.cell[i][j + 1].p >= res.cell[i][j].p) ? res.cell[i][j + 1].ky / res.visc_w(i, j + 1) / res.Bw(i, j + 1) : res.cell[i][j].ky / res.visc_w(i, j) / res.Bw(i, j);
+                if (exists(res.cell, i, j + 1)) {
+                    lambda_y_o_pos = (res.cell[i][j + 1].p >= res.cell[i][j].p) ? res.kro(i, j+1) / res.visc_o(i, j + 1) / res.Bo(i, j + 1) : res.kro(i, j) / res.visc_o(i, j) / res.Bo(i, j);
+                    lambda_y_w_pos = (res.cell[i][j + 1].p >= res.cell[i][j].p) ? res.krw(i, j+1) / res.visc_w(i, j + 1) / res.Bw(i, j + 1) : res.krw(i, j) / res.visc_w(i, j) / res.Bw(i, j);
                     Tyo_pos[i][j] = 2 * lambda_y_o_pos / res.cell[i][j].dy / (res.cell[i][j + 1].dy / res.cell[i][j + 1].ky + res.cell[i][j].dy / res.cell[i][j].ky);
                     Tyw_pos[i][j] = 2 * lambda_y_w_pos / res.cell[i][j].dy / (res.cell[i][j + 1].dy / res.cell[i][j + 1].ky + res.cell[i][j].dy / res.cell[i][j].ky);
                 }
 
-                console.log(i, j);
+                //console.log(i, j);
                 Txo_neg[i][j] = Txo_neg[i][j] * 0.001127;
                 Txo_pos[i][j] = Txo_pos[i][j] * 0.001127;
                 Txw_neg[i][j] = Txw_neg[i][j] * 0.001127;
@@ -131,23 +121,22 @@ let simulate = function(res, wells, timesteps) {
 
                 a = Txo_neg[i][j] + alpha * Txw_neg[i][j];
                 c = Txo_pos[i][j] + alpha * Txw_pos[i][j];
-                b = -(Txo_pos[i][j] + Txo_neg[i][j] + Tyo_pos[i][j] + Tyo_neg[i][j] + Cpoo[i][j]) - alpha * (Txw_pos[i][j] + Txw_neg[i][j] + Tyw_pos[i][j] + Tyw_neg[i][j] + Cpow[i][j]);
+                b = -(Txo_pos[i][j] + Txo_neg[i][j] + Tyo_pos[i][j] + Tyo_neg[i][j] + Cpoo[i][j]) - alpha * (Txw_pos[i][j] + Txw_neg[i][j] + Tyw_pos[i][j] + Tyw_neg[i][j] + Cpoo[i][j]);
                 e = Tyo_neg[i][j] + alpha * Tyw_neg[i][j];
                 f = Tyo_pos[i][j] + alpha * Tyw_pos[i][j];
-                d = -(Cpoo[i][j] + alpha * Cpow[i][j]) * res.cell[i][j].p + res.cell[i][j].qo_ + alpha * res.cell[i][j].qw_ + alpha * Txw_pos[i][j] * (res.p_cow(i + 1, j) - res.p_cow(i, j)) + alpha * Txw_neg[i][j] * (res.p_cow(i - 1, j) - res.p_cow(i, j)) + alpha * Tyw_pos[i][j] * (res.p_cow(i, j + 1) - res.p_cow(i, j)) + alpha * Tyw_neg[i][j] * (res.p_cow(i, j - 1) - res.p_cow(i, j));
+                d = (-(Cpoo[i][j] + alpha * Cpow[i][j]) * res.cell[i][j].p +
+                    res.cell[i][j].qo_ + alpha * res.cell[i][j].qw_ +
+                    alpha * Txw_pos[i][j] * (res.p_cow(i + 1, j) - res.p_cow(i, j)) +
+                    alpha * Txw_neg[i][j] * (res.p_cow(i - 1, j) - res.p_cow(i, j)) +
+                    alpha * Tyw_pos[i][j] * (res.p_cow(i, j + 1) - res.p_cow(i, j)) +
+                    alpha * Tyw_neg[i][j] * (res.p_cow(i, j - 1) - res.p_cow(i, j)));
 
-                // a = Math.trunc(a);
-                // b = Math.trunc(b);
-                // c = Math.trunc(c);
-                // d = Math.trunc(d);
-                // e = Math.trunc(e);
-                // f = Math.trunc(f);
-                //console.log(a, b, c, d, e, f);
-                //var fs = require('fs');
+
+                console.log(d);//a, b, c, d, e, f);
 
                 darr.push(d);
 
-                var cellIndex = res.cell[i][j].index;
+                let cellIndex = res.cell[i][j].index;
                 if (exists(A, cellIndex, cellIndex)) {
                     A[cellIndex][cellIndex] = b;
                 }
@@ -166,50 +155,14 @@ let simulate = function(res, wells, timesteps) {
             }
         }
 
-        //}
-        //var row =[];
-        var B = [
-            []
-        ];
-        //console.log(res.cell.length, res.cell[0].length);
-        // for (var ri = 0; ri < res.cell.length * res.cell[0].length; ri++) {
-        //     A[ri] = [];
-        //     B[ri] = [];
-        //     for (var rj = 0; rj < res.cell.length * res.cell[0].length; rj++) {
-        //         //console.log(ri, rj);
-        //         if (ri == rj + 1) {
-        //             A[ri][rj] = a;
-        //             B[ri][rj] = 'a';
-        //         } else if (ri == rj) {
-        //             A[ri][rj] = b;
-        //             B[ri][rj] = 'b';
-        //         } else if (ri == rj - 1) {
-        //             A[ri][rj] = c;
-        //             B[ri][rj] = 'c';
-        //         } else if (rj == ri + res.cell[0].length - 1) {
-        //             A[ri][rj] = f;
-        //             B[ri][rj] = 'f';
-        //         } else if (ri == rj + res.cell.length - 1) {
-        //             A[ri][rj] = e;
-        //             B[ri][rj] = 'e';
-        //         } else {
-        //             A[ri][rj] = 0;
-        //             B[ri][rj] = 0;
-        //         }
-        //     }
-        //     // fs.appendFileSync("/tmp/test", A[ri] + '\n');
-        // }
-        // fs.appendFileSync("/tmp/test", '\n');
-        // fs.appendFileSync("/tmp/test", darr);
-
         //console.log('A = ', B, '\n');
         //console.log('d = ', darr, '\n');
-        P_new = gauss(A, darr);
-        var Pnew = arrayToMatrix(P_new, res.cell[0].length);
+        let P_new = gauss(A, darr);
+        let Pnew = arrayToMatrix(P_new, res.cols);
         //console.log('P_new = ', Pnew, '\n');
 
         //stop solving if any of the pressures is less than bottom hole
-        for (var wellIndex = 0; wellIndex < wells.length; wellIndex++) {
+        for (let wellIndex = 0; wellIndex < wells.length; wellIndex++) {
             if (Pnew[wells[wellIndex].loc.x][wells[wellIndex].loc.y] < wells[wellIndex].p_bh) {
                 //console.log('stop simulation: p < p_bh, timestep: ', timeIndex);
                 //return returnModule();
@@ -217,7 +170,7 @@ let simulate = function(res, wells, timesteps) {
         }
 
         function arrayToMatrix(list, elementsPerSubArray) {
-            var matrix = [],
+            let matrix = [],
                 i, k;
 
             for (i = 0, k = -1; i < list.length; i++) {
@@ -234,29 +187,29 @@ let simulate = function(res, wells, timesteps) {
 
         //calculate new saturations
         //console.log(Pnew);
-        var Swnew = [
+        let Swnew = [
             []
         ];
-        for (var i = 0; i < res.rows; i++) {
+        for (let i = 0; i < res.rows; i++) {
             Swnew[i] = [];
-            for (var j = 0; j < res.cols; j++) {
-                var Pnewi_pos, Pnewi_neg, Pnewj_pos, Pnewj_neg;
-                if (i == 0) {
+            for (let j = 0; j < res.cols; j++) {
+                let Pnewi_pos, Pnewi_neg, Pnewj_pos, Pnewj_neg;
+                if (i === 0) {
                     Pnewi_neg = 4500;
                 } else {
                     Pnewi_neg = Pnew[i - 1][j];
                 }
-                if (j == 0) {
+                if (j === 0) {
                     Pnewj_neg = 4500;
                 } else {
                     Pnewj_neg = Pnew[i][j - 1];
                 }
-                if (i == res.rows - 1) {
+                if (i === res.rows - 1) {
                     Pnewi_pos = 4500;
                 } else {
                     Pnewi_pos = Pnew[i + 1][j];
                 }
-                if (j == res.cols - 1) {
+                if (j === res.cols - 1) {
                     Pnewj_pos = 4500;
                 } else {
                     Pnewj_pos = Pnew[i][j + 1];
@@ -280,6 +233,7 @@ let simulate = function(res, wells, timesteps) {
         for (let i = 0; i < res.cell.length; i++) {
             for (let j = 0; j < res.cell[0].length; j++) {
                 if(Pnew[i][j] < 0) Pnew[i][j] = 0;
+                if(Pnew[i][j] > res.Pi) Pnew[i][j] = res.Pi;
                 if(Swnew[i][j] < 0) Swnew[i][j] = 0;
                 if(Swnew[i][j] > 1) Swnew[i][j] = 1;
                 res.cell[i][j].p = Pnew[i][j];
@@ -297,9 +251,10 @@ let simulate = function(res, wells, timesteps) {
     }
 
     function returnModule() {
+        //res.Pr = res.Pr();
         res.N_o += N_o;
-        console.log(Pnew);
-        console.log(Swnew);
+        //console.log(Pnew);
+        //console.log(Swnew);
         console.log('done simulating.');
         return res; // {
         //     N_o: N_o,
@@ -311,6 +266,6 @@ let simulate = function(res, wells, timesteps) {
     //console.log('N_o ', N_o);
     //console.log('N_w ' ,N_w);
     return returnModule();
-}
+};
 
 exports.simulate = simulate;
