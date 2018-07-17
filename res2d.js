@@ -73,7 +73,7 @@ function Res(gridblocksX, gridblocksY) {
     };
 
     this.d1_Bw_dPw = function(i, j) {
-        return 0;//0.01 * this.d1_Bo_dPo(i, j); //0;
+        return 0;//0.1 * this.d1_Bo_dPo(i, j); //0;
     };
 
     this.dPcow_dSw = function(i, j) {
@@ -128,6 +128,9 @@ function Res(gridblocksX, gridblocksY) {
 
                 this.cell[loc.x][loc.y].qo_ = WC * this.Bo(loc.x, loc.y) / Volume * lambda_o_well * (this.cell[loc.x][loc.y].p - wells[wellIndex].p_bh);
                 this.cell[loc.x][loc.y].qw_ = WC * this.Bw(loc.x, loc.y) / Volume * lambda_w_well * (this.cell[loc.x][loc.y].p - this.p_cow(loc.x, loc.y) - wells[wellIndex].p_bh);
+
+                if(this.cell[loc.x][loc.y].qo_ < 0) this.cell[loc.x][loc.y].qo_ = 0;
+                if(this.cell[loc.x][loc.y].qw_ < 0) this.cell[loc.x][loc.y].qw_ = 0;
 
             } else if (wells[wellIndex].condition === 'rate') {
                 this.cell[loc.x][loc.y].qo_ = wells[wellIndex].qo_ * this.Bo(loc.x, loc.y) / Volume;
@@ -189,8 +192,7 @@ function Res(gridblocksX, gridblocksY) {
         }
         return Math.trunc(OIP / 5.614583/1000000*100)/100;//in MMSTB
     };
-    this.OOIP = this.calcOIP();
-    this.Pr = function(){
+    this.Pavg = function(){
         let sum = 0;
         for(let i = 0; i < this.rows; i++){
             for(let j = 0; j < this.cols; j++){
@@ -199,6 +201,7 @@ function Res(gridblocksX, gridblocksY) {
         }
         return sum/this.gridblocks;
     };
+    this.OOIP = this.calcOIP();
 }
 
 //exports.res = res;

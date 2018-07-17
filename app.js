@@ -31,10 +31,11 @@ let simulate = require('./simulator2d-server.js').simulate;
 let Res = require('./res2d.js').Res;
 const Well = require('./well.js').Well;
 
-const gridblocks = 15;
+const gridblocksX = 50;
+const gridblocksY = 50;
 const rate = 200000;
-let res = new Res(gridblocks, gridblocks);
-let wells = [new Well(7, 7, 'rate', 3350, rate, rate/10)];
+let res = new Res(gridblocksX, gridblocksY);
+let wells = [new Well(7, 7, 'pressure', 3350, rate, rate/10), new Well(12, 9, 'pressure', 3350, rate, rate/10), new Well(5, 20, 'pressure', 3350, rate, rate/10)];
 let timesteps = 1;
 
 //load neural network
@@ -89,7 +90,7 @@ io.on('connection', function(socket) {
         net.fromJSON(JSON.parse(netJSON));
 
         console.log('simulating using ann');
-        let newRes = new Res(gridblocks, gridblocks);
+        let newRes = new Res(gridblocksX, gridblocksY);
         let newWells = [new Well(10, 8)];
         let N_o = net.run(newRes.linearize(newWells, timesteps));
         io.emit('simulate-ann-final', N_o, clone(newRes), clone(newWells));
@@ -103,7 +104,7 @@ io.on('connection', function(socket) {
         let netJSON = fs.readFileSync('network.json', 'utf8');
         net.fromJSON(JSON.parse(netJSON));
 
-        pso.init(numParticles, gridblocks, gridblocks, numWells);
+        pso.init(numParticles, gridblocksX, gridblocksY, numWells);
         for(let i = 0; i < numIterations; i++){
             pso.step(clone(res), timesteps, function(res, wells, timesteps){
                 let val = net.run(res.linearize(wells, timesteps));

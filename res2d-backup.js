@@ -33,14 +33,14 @@ function Cell(p, poro, perm, dx) {
 }
 
 function Res(gridblocksX, gridblocksY) {
-    this.Pi = 8500;//psi
+    this.Pi = 4500;//psi
     this.cell = [
         []
     ];
     for (var i = 0; i < gridblocksX; i++) {
         this.cell[i] = [];
         for (var j = 0; j < gridblocksY; j++) {
-            this.cell[i][j] = new Cell(8500, 0.3, 100, 1000);
+            this.cell[i][j] = new Cell(4500, 0.3, 100, 1000);
         }
     }
     this.Bo = function(i, j) {

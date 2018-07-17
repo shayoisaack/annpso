@@ -33,7 +33,7 @@ let simulate = function(res, wells, timesteps) {
         //console.log(q_);
         N_o += q_.qo_;
         N_w += q_.qw_;
-        //
+
         res.qo_ = q_.qo_;
         res.qw_ = q_.qw_;
 
@@ -124,15 +124,14 @@ let simulate = function(res, wells, timesteps) {
                 b = -(Txo_pos[i][j] + Txo_neg[i][j] + Tyo_pos[i][j] + Tyo_neg[i][j] + Cpoo[i][j]) - alpha * (Txw_pos[i][j] + Txw_neg[i][j] + Tyw_pos[i][j] + Tyw_neg[i][j] + Cpoo[i][j]);
                 e = Tyo_neg[i][j] + alpha * Tyw_neg[i][j];
                 f = Tyo_pos[i][j] + alpha * Tyw_pos[i][j];
-                d = (-(Cpoo[i][j] + alpha * Cpow[i][j]) * res.cell[i][j].p +
+                d = -(Cpoo[i][j] + alpha * Cpow[i][j]) * res.cell[i][j].p +
                     res.cell[i][j].qo_ + alpha * res.cell[i][j].qw_ +
                     alpha * Txw_pos[i][j] * (res.p_cow(i + 1, j) - res.p_cow(i, j)) +
                     alpha * Txw_neg[i][j] * (res.p_cow(i - 1, j) - res.p_cow(i, j)) +
                     alpha * Tyw_pos[i][j] * (res.p_cow(i, j + 1) - res.p_cow(i, j)) +
-                    alpha * Tyw_neg[i][j] * (res.p_cow(i, j - 1) - res.p_cow(i, j)));
+                    alpha * Tyw_neg[i][j] * (res.p_cow(i, j - 1) - res.p_cow(i, j));
 
-
-                console.log(d);//a, b, c, d, e, f);
+                //console.log(d);//a, b, c, d, e, f);
 
                 darr.push(d);
 
@@ -247,14 +246,19 @@ let simulate = function(res, wells, timesteps) {
 
         //console.log('res = ', res);
 
+        console.log(Pnew);
+        console.log(Swnew);
+        for(let i = 0; i < res.rows; i++){
+            for(let j = 0; j < res.cols; j++){
+                console.log(res.cell[i][j].p);
+            }
+        }
         //go to next timestep
     }
 
     function returnModule() {
         //res.Pr = res.Pr();
         res.N_o += N_o;
-        //console.log(Pnew);
-        //console.log(Swnew);
         console.log('done simulating.');
         return res; // {
         //     N_o: N_o,
