@@ -8,7 +8,7 @@ let Particle = function(x, y){
     this.makeWells = function(){
         let wells = [];
         for(let i = 0; i < this.x.length; i++){
-            wells.push({condition: 'pressure', loc: {x: this.x[i], y: this.y[i]}, p_bh: 3350});
+            wells.push({condition: 'pressure', loc: {x: this.x[i], y: this.y[i]}, p_bh: 3350, qo_: 200000, qw_: 20000});
         }
         return wells;
     }
@@ -20,6 +20,9 @@ let PSO = function (){
     this.gBestVal = null;
     this.gBestParticle = {};
     this.numParticles = 0;
+    this.social = 0.1;
+    this.personal = 0.2;
+
     this.setObjective = function(objectiveFunction, res, timesteps){
         this.objectiveFunction = objectiveFunction;
         this.res = res;
@@ -46,7 +49,7 @@ let PSO = function (){
         this.gBestVal = {
             x: x,
             y: y
-        }
+        };
         //console.log(this.particles);
         return this.particles;
     };
@@ -54,13 +57,18 @@ let PSO = function (){
         let gBest = this.gBest;
         let gBestVal = this.gBestVal;
         let gBestParticle = this.gBestParticle;
+        let social = this.social;
+        let personal = this.personal;
         this.particles.forEach(function(particle){
             //find fitness of particle and assign it
             //console.log(particle.x, particle.y);
             //console.log('res', res);
             //console.log('timesteps', timesteps);
             //console.log(particle.makeWells());
+
             particle.fitness = objectiveFunction(res, particle.makeWells(), timesteps);
+            console.log('particle fitness: ', particle.fitness);
+
             if(particle.fitness > particle.pBest){
                 particle.pBest = particle.fitness;
                 particle.pBestVal = {
@@ -79,11 +87,13 @@ let PSO = function (){
             //console.log(gBest, gBestVal);
             //compute velocity and move particle
             for(let i = 0; i < particle.x.length; i++) {
-                particle.vx[i] = particle.vx[i] + 2 * Math.random() * (particle.pBestVal.x[i] - particle.x[i]) + 2 * Math.random() * (gBestVal.x[i] - particle.x[i]);
-                particle.vy[i] = particle.vy[i] + 2 * Math.random() * (particle.pBestVal.y[i] - particle.y[i]) + 2 * Math.random() * (gBestVal.y[i] - particle.y[i]);
+                particle.vx[i] = particle.vx[i] + 2 * personal*Math.random() * (particle.pBestVal.x[i] - particle.x[i]) + 2 *social* Math.random() * (gBestVal.x[i] - particle.x[i]);
+                particle.vy[i] = particle.vy[i] + 2 * personal*Math.random() * (particle.pBestVal.y[i] - particle.y[i]) + 2 *social* Math.random() * (gBestVal.y[i] - particle.y[i]);
 
                 particle.x[i] = Math.floor(particle.x[i] + particle.vx[i]);
                 particle.y[i] = Math.floor(particle.y[i] + particle.vy[i]);
+
+                console.log(particle.vx[i], particle.vy[i]);
 
                 if (particle.x[i] < 0) {
                     particle.x[i] = 0;

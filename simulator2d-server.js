@@ -30,7 +30,7 @@ let simulate = function(res, wells, timesteps) {
 
         //set wells
         let q_ = res.addWells(wells);
-        //console.log(q_);
+        console.log(q_);
         N_o += q_.qo_;
         N_w += q_.qw_;
 
@@ -246,11 +246,11 @@ let simulate = function(res, wells, timesteps) {
 
         //console.log('res = ', res);
 
-        console.log(Pnew);
-        console.log(Swnew);
+        // console.log(Pnew);
+        // console.log(Swnew);
         for(let i = 0; i < res.rows; i++){
             for(let j = 0; j < res.cols; j++){
-                console.log(res.cell[i][j].p);
+                //console.log(res.cell[i][j].p);
             }
         }
         //go to next timestep
@@ -260,7 +260,7 @@ let simulate = function(res, wells, timesteps) {
         //res.Pr = res.Pr();
         res.N_o += N_o;
         console.log('done simulating.');
-        return res; // {
+        return res.N_o; // {
         //     N_o: N_o,
         //     N_w: N_w,
         //     res: res

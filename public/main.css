@@ -68,7 +68,7 @@
         border-collapse: collapse;
     }
 
-    td {
+    .cell {
         border: 1px solid #ddd;
         /*rgba(0,0,0,0.2);*/
         margin: 0;
@@ -102,6 +102,18 @@
         cursor: pointer;
     }
 
+    .short{
+        margin: 0 1px 4px 0;
+        width: 40px;
+        text-align: center;
+    }
+    .input{
+        padding: 6px;
+        margin: 0 0 4px 4px;
+        color: black;
+        display: inline-block;
+    }
+
     #map,
     #other {
         width: 50%;
@@ -117,10 +129,11 @@
 
     #choose-res {
         display: block;
-        width: 50%;
+        width: 100%;
         padding: 6px;
         margin-top: 10px;
         position: relative;
+        clear: both;
         top: 4px;
     }
 
@@ -154,6 +167,10 @@
         background: rgba(0, 0, 0, 0.0);
         margin: 25px 0 10px 0;
         padding: 25px 5px 0 5px;
+
+    }
+
+    #chart{
     }
 
     #other-info {
@@ -177,3 +194,60 @@
     a{
         text-decoration: none;
     }
+
+    .select-short{
+        opacity: 0.6;
+        cursor: not-allowed;
+    }
+
+.slidecontainer {
+    width: 100%; /* Width of the outside container */
+}
+
+/* The slider itself */
+.slider {
+    -webkit-appearance: none;  /* Override default CSS styles */
+    appearance: none;
+    width: 100%; /* Full-width */
+    height: 25px; /* Specified height */
+    background: #d3d3d3; /* Grey background */
+    outline: none; /* Remove outline */
+    opacity: 0.7; /* Set transparency (for mouse-over effects on hover) */
+    -webkit-transition: .2s; /* 0.2 seconds transition on hover */
+    transition: opacity .2s;
+}
+
+/* Mouse-over effects */
+.slider:hover {
+    opacity: 1; /* Fully shown on mouse-over */
+}
+
+/* The slider handle (use -webkit- (Chrome, Opera, Safari, Edge) and -moz- (Firefox) to override default look) */
+.slider::-webkit-slider-thumb {
+    -webkit-appearance: none; /* Override default look */
+    appearance: none;
+    width: 25px; /* Set a specific slider handle width */
+    height: 25px; /* Slider handle height */
+    background: #4CAF50; /* Green background */
+    cursor: pointer; /* Cursor on hover */
+}
+
+.slider::-moz-range-thumb {
+    width: 25px; /* Set a specific slider handle width */
+    height: 25px; /* Slider handle height */
+    background: #4CAF50; /* Green background */
+    cursor: pointer; /* Cursor on hover */
+}
+
+#modify-box td{
+    padding: 0 8px 0 8px;
+}
+
+.on{
+    opacity: 0.6;
+    cursor: not-allowed;
+}
+
+.place-well{
+    cursor: pointer;
+}

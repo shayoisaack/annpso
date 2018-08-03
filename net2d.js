@@ -6,27 +6,34 @@ const net = new brain.NeuralNetwork({
 });
 const Res = require('./res2d.js').Res;
 const Well = require('./well.js').Well;
-const simulate = require('./simulator2dtrain.js').simulate;
+const simulate = require('./simulator2d-server.js').simulate;
 const sim1 = require('./simulator2d-server').simulate;
 const fs = require('fs');
+const clone = require('clone');
+const restoreResMethods = require('./res2d.js').restoreResMethods;
 
 let examples = [];
 
-const timesteps = 10;
-const gridblocks = 15;
+const timesteps = 1;
+const gridblocks = 20;
 const numWells = 1;
 const netDiv = 1e10;
 const readExamplesFromFile = false;
+
+let reservoir = fs.readFileSync('reservoirs/Hetero 3.json', 'utf8');
+reservoir = JSON.parse(reservoir);
+restoreResMethods(reservoir);
 
 if(readExamplesFromFile){
     let examplesJSON = fs.readFileSync('examples.json', 'utf8');
     examples = JSON.parse(examplesJSON);
 }
 else {
-    let res = new Res(gridblocks, gridblocks);
+    //let res = new Res(gridblocks, gridblocks);
     //generate examples for use in neural network
     for (let i = 0; i < 30; i++) {
-        res = new Res(gridblocks, gridblocks);
+        //res = new Res(gridblocks, gridblocks);
+        let res = clone(reservoir);
         let randNumX, randNumY;
         let wells = [];
         for (let j = 0; j < numWells; j++) {
@@ -38,11 +45,13 @@ else {
         console.log('simulator result:', N_o);
         examples.push({
             input: res.linearize(wells, timesteps),
-            output: [N_o / netDiv]
+            output: [N_o]
         });//[simulate(res, wells, timesteps)]});
         //}
     }
     //console.log(examples);
+    var max, min;
+    normalize(examples);
     console.log('done examples');
     //save examples to file
     fs.writeFile('examples.json', JSON.stringify(examples), function(err){
@@ -59,7 +68,7 @@ else {
 //train and test neural network on examples
 net.train(examples, {
     errorThresh: 0.005, // error threshold to reach
-    //iterations: 20000, // maximum training iterations
+    iterations: 20000, // maximum training iterations
     log: true, // number of iterations between logging
     learningRate: 0.3 // learning rate
 });
@@ -81,7 +90,8 @@ for(let i = 0; i < testCases; i++) {
     for(let j = 0; j < numWells; j++) {
         wells[j] = new Well(randNumX = Math.floor(Math.random() * gridblocks), randNumY = Math.floor(Math.random() * gridblocks));
     }
-    let res1 = new Res(gridblocks, gridblocks);
+    let res1 = clone(reservoir);
+    //let res1 = new Res(gridblocks, gridblocks);
     //let wells1 = [{condition: 'pressure', loc: {x: 4, y: 5}, p_bh: 3350}];
     let nnVal, simVal, simStartTime, simEndTime, netStartTime, netEndtime, simTime, netTime;
     simStartTime = new Date();
@@ -90,7 +100,9 @@ for(let i = 0; i < testCases; i++) {
     simTime = (simEndTime.getTime()-simStartTime.getTime())/1000;
 
     netStartTime = new Date();
-    console.log('neural network ', nnVal = net.run(res1.linearize(wells, timesteps)) * netDiv);
+    nnVal = net.run(res1.linearize(wells, timesteps));
+    nnVal = nnVal*(max - min)+min;
+    console.log('neural network ', nnVal);// * netDiv);
     netEndtime = new Date();
     netTime = (netEndtime.getTime()-netStartTime.getTime())/1000;
 
@@ -110,23 +122,22 @@ console.log('computational improvement ', simSumTIme/netSumTime, 'times faster')
 // console.log('sim ', simulate(new Res(15, 15), [new Well(10, 8)], 10));
 // console.log('sim1 ', resul1.N_o);
 
-function standardize(examples){
-    for (let i = 0; i < examples[0].input.length; i++){
-        let min = examples[0].input[i];
-        let max = examples[0].input[i];
-        //find min and max for input neuron
-        for (let j = 0; j < examples.length; j++){
-            if(examples[j].input[i] > max){
-                max = examples[j].input[i];
-            }
-            if(examples[j].input[i] < min){
-                min = examples[j].input[i];
-            }
+function normalize(examples){
+        min = examples[0].output[0];
+        max = examples[0].output[0];
+    for (let i = 0; i < examples.length; i++){
+        if(examples[i].output[0] > max){
+            max = examples[i].output[0];
         }
-        //standardize input using found min and max
-        for (let j = 0; j < examples.length; j++){
-            examples[j].input[i] = (examples[j].input[i] - min)/(max - min);
+
+        if(examples[i].output[0] < min){
+            min = examples[i].output[0];
         }
     }
-    return examples;
+    console.log('min', min);
+    console.log('max', max);
+        //normalize input using found min and max
+        for (let j = 0; j < examples.length; j++){
+            examples[j].output[0] = (examples[j].output[0] - min)/(max - min);
+        }
 }

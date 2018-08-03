@@ -17,13 +17,17 @@
     <span class='header-item right' style='color: rgba(0,0,0,0.8); cursor: none;'>Well Placement Using ANN</span>
 </div>
     <div id='main'>
-        <div id='map'></div>
+        <div style="float: left;">
+            <div id='map'></div>
+            <select id='choose-res'>
+            </select>
+        </div>
         <div id='other'>
             <div id='colorbar'></div>
             <div id='labels'>
-                <div class='label'>0%</div>
-                <div class='label' style='text-align: center;'>So</div>
-                <div class='label' style='text-align: right;'>100%</div>
+                <div class='label'>0 md</div>
+                <div class='label' style='text-align: center;'>PP = k*&Phi;*So</div>
+                <div class='label' style='text-align: right;'>100 md</div>
             </div>
             <div id='chart-box'>
                 <canvas id='chart'></canvas>
@@ -42,41 +46,61 @@
                 </div>
             </div>
         </div>
-        <select id='choose-res'>
-            <option value="volvo">Reservoir 1 (50 x 50)</option>
-            <option value="saab">Saab</option>
-            <option value="mercedes">Mercedes</option>
-            <option value="audi">Audi</option>
-        </select>
     </div>
     <div id='controls'>
         <div class='section'>
-            <div class='section-header'>Wells</div>
-            <div class='button'>Manually Place Well</div>
+            <div class='section-header'>Create New*</div>
+            <table>
+                <tr>
+                    <td><span class='button-text'>Name: </span></td>
+                    <td><input id='edit-name' class='input' type="text"/></td>
+                </tr>
+                <tr>
+                    <td><span class='button-text'>Size: </span></td>
+                    <td><input id="edit-rows" class='input' style="width:50px" type="text"/> x<input id="edit-cols" style="width: 50px;" class='input' type="text"/></td>
+                </tr>
+            </table>
+            <div class='button' id="res-update">Create Reservoir</div>
         </div>
         <div class='section'>
-            <div class='section-header'>Simulate</div>
-            <div class='button' id='simulate-simulator'>Use Simulator</div><span class='button-text' id='simulate-simulator-text'></span>
-            <br/>
-            <div class='button' id='simulate-ann'>Use ANN*</div><span class='button-text' id="simulate-ann-text"></span>
-            <br/>
-            <div class='button' id='simulate-all'>Use All</div>
+            <div class='section-header'>Modify</div>
+            <table id="modify-box" border="0">
+                <tr>
+                    <td>Radius:</td>
+                    <td><div class="slidecontainer">
+                            <input type="range" min="1" max="100" value="15" class="" id="myRange">
+                        </div>
+                    </td>
+                    <td><span id="brush-radius"></span></td>
+                </tr>
+                <tr>
+                    <td><span class='button-text'>&Phi;: </span></td>
+                    <td><div class="button short neg" data-id="edit-poro">-</div><div class="button short" data-id="edit-poro">+</div></td>
+                    <td><span id="edit-poro-text"></span></td>
+                </tr>
+                <tr>
+                    <td><span class='button-text'>k: </span></td>
+                    <td><div class="button short neg" data-id="edit-k">-</div><div class="button short" data-id="edit-k">+</div></td>
+                    <td><span id="edit-k-text"></span></td>
+                </tr>
+                <tr>
+                    <td><span class='button-text'>So: </span></td>
+                    <td><div class="button short neg" data-id="edit-so">-</div><div class="button short" data-id="edit-so">+</div></td>
+                    <td><span id="edit-so-text"></span></td>
+                </tr>
+            </table>
         </div>
         <div class='section'>
-            <div class='section-header'>Solve</div>
-            <div class='button'>Use Simulator</div><span class='button-text'>-</span>
-            <br/>
-            <div class='button'>Use ANN</div><span class='button-text'></span>
-            <br/>
-            <div class='button'>Use ANN-PSO*</div><span class='button-text'></span>
-            <br/>
-            <div class='button'>Use All</div>
+            <div class='button' id="reservoir-save">Save</div><span class="button-text" id="reservoir-save-text"></span>
         </div>
         <div style='padding: 10px; font-size: 0.8em;'>*The method proposed in this research. Note perfomance improvements compared to traditional approaches.</div>
     </div>
 </body>
 <script type="text/javascript" src="./jquery.js"></script>
+<script src="utilities.js"></script>
+<script src="clone.js"></script>
 <script src="/socket.io/socket.io.js"></script>
-<script src='Chart.js'></script>
+<script src='loader.js'></script>
 <script src='main.js'></script>
+<script src='reservoir.js'></script>
 </html>
